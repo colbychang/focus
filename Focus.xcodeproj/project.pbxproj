@@ -19,6 +19,7 @@
 		A1000052 /* WidgetAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000052 /* Assets.xcassets */; };
 		A1000060 /* FocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000060 /* FocusTests.swift */; };
 		A1000061 /* SwiftDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000061 /* SwiftDataModelTests.swift */; };
+		A1000062 /* ProtocolAbstractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000062 /* ProtocolAbstractionTests.swift */; };
 		A1000070 /* FocusUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000070 /* FocusUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
@@ -128,6 +129,7 @@
 		A2000055 /* FocusWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FocusWidgets.entitlements; sourceTree = "<group>"; };
 		A2000060 /* FocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTests.swift; sourceTree = "<group>"; };
 		A2000061 /* SwiftDataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModelTests.swift; sourceTree = "<group>"; };
+		A2000062 /* ProtocolAbstractionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtocolAbstractionTests.swift; sourceTree = "<group>"; };
 		A2000070 /* FocusUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusUITests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -291,6 +293,7 @@
 			children = (
 				A2000060 /* FocusTests.swift */,
 				A2000061 /* SwiftDataModelTests.swift */,
+				A2000062 /* ProtocolAbstractionTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -671,6 +674,7 @@
 			files = (
 				A1000060 /* FocusTests.swift in Sources */,
 				A1000061 /* SwiftDataModelTests.swift in Sources */,
+				A1000062 /* ProtocolAbstractionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
