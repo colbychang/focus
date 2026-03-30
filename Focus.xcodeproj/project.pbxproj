@@ -21,6 +21,15 @@
 		A1000061 /* SwiftDataModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000061 /* SwiftDataModelTests.swift */; };
 		A1000062 /* ProtocolAbstractionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000062 /* ProtocolAbstractionTests.swift */; };
 		A1000070 /* FocusUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000070 /* FocusUITests.swift */; };
+		A10000A0 /* AuthorizationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A0 /* AuthorizationViewModel.swift */; };
+		A10000A1 /* AuthorizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A1 /* AuthorizationView.swift */; };
+		A10000A2 /* AuthorizationDeniedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A2 /* AuthorizationDeniedView.swift */; };
+		A10000A3 /* FocusTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A3 /* FocusTabView.swift */; };
+		A10000A4 /* DeepFocusTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A4 /* DeepFocusTabView.swift */; };
+		A10000A5 /* StatsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A5 /* StatsTabView.swift */; };
+		A10000A6 /* SettingsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A6 /* SettingsTabView.swift */; };
+		A10000B0 /* AppShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000B0 /* AppShellTests.swift */; };
+		A10000B1 /* AppShellUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000B1 /* AppShellUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
 		A1000082 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000003 /* FocusCore */; };
@@ -131,6 +140,15 @@
 		A2000061 /* SwiftDataModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataModelTests.swift; sourceTree = "<group>"; };
 		A2000062 /* ProtocolAbstractionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProtocolAbstractionTests.swift; sourceTree = "<group>"; };
 		A2000070 /* FocusUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusUITests.swift; sourceTree = "<group>"; };
+		A20000A0 /* AuthorizationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationViewModel.swift; sourceTree = "<group>"; };
+		A20000A1 /* AuthorizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationView.swift; sourceTree = "<group>"; };
+		A20000A2 /* AuthorizationDeniedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizationDeniedView.swift; sourceTree = "<group>"; };
+		A20000A3 /* FocusTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTabView.swift; sourceTree = "<group>"; };
+		A20000A4 /* DeepFocusTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusTabView.swift; sourceTree = "<group>"; };
+		A20000A5 /* StatsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsTabView.swift; sourceTree = "<group>"; };
+		A20000A6 /* SettingsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTabView.swift; sourceTree = "<group>"; };
+		A20000B0 /* AppShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellTests.swift; sourceTree = "<group>"; };
+		A20000B1 /* AppShellUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellUITests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4000010 /* DeviceActivityMonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -229,11 +247,42 @@
 			children = (
 				A2000001 /* FocusApp.swift */,
 				A2000002 /* ContentView.swift */,
+				A90000A0 /* ViewModels */,
+				A90000A1 /* Views */,
 				A2000003 /* Assets.xcassets */,
 				A2000004 /* Info.plist */,
 				A2000005 /* Focus.entitlements */,
 			);
 			path = Focus;
+			sourceTree = "<group>";
+		};
+		A90000A0 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				A20000A0 /* AuthorizationViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A90000A1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				A20000A1 /* AuthorizationView.swift */,
+				A20000A2 /* AuthorizationDeniedView.swift */,
+				A90000A2 /* Tabs */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A90000A2 /* Tabs */ = {
+			isa = PBXGroup;
+			children = (
+				A20000A3 /* FocusTabView.swift */,
+				A20000A4 /* DeepFocusTabView.swift */,
+				A20000A5 /* StatsTabView.swift */,
+				A20000A6 /* SettingsTabView.swift */,
+			);
+			path = Tabs;
 			sourceTree = "<group>";
 		};
 		A9000010 /* DeviceActivityMonitorExtension */ = {
@@ -294,6 +343,7 @@
 				A2000060 /* FocusTests.swift */,
 				A2000061 /* SwiftDataModelTests.swift */,
 				A2000062 /* ProtocolAbstractionTests.swift */,
+				A20000B0 /* AppShellTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -302,6 +352,7 @@
 			isa = PBXGroup;
 			children = (
 				A2000070 /* FocusUITests.swift */,
+				A20000B1 /* AppShellUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -624,6 +675,13 @@
 			files = (
 				A1000001 /* FocusApp.swift in Sources */,
 				A1000002 /* ContentView.swift in Sources */,
+				A10000A0 /* AuthorizationViewModel.swift in Sources */,
+				A10000A1 /* AuthorizationView.swift in Sources */,
+				A10000A2 /* AuthorizationDeniedView.swift in Sources */,
+				A10000A3 /* FocusTabView.swift in Sources */,
+				A10000A4 /* DeepFocusTabView.swift in Sources */,
+				A10000A5 /* StatsTabView.swift in Sources */,
+				A10000A6 /* SettingsTabView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -675,6 +733,7 @@
 				A1000060 /* FocusTests.swift in Sources */,
 				A1000061 /* SwiftDataModelTests.swift in Sources */,
 				A1000062 /* ProtocolAbstractionTests.swift in Sources */,
+				A10000B0 /* AppShellTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -683,6 +742,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1000070 /* FocusUITests.swift in Sources */,
+				A10000B1 /* AppShellUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
