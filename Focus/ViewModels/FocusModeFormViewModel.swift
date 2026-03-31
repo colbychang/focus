@@ -85,6 +85,7 @@ final class FocusModeFormViewModel {
     init(service: FocusModeService, profile: FocusMode) {
         self.service = service
         self.editingProfileId = profile.id
+        self.editingProfile = profile
         self.name = profile.name
         self.iconName = profile.iconName
         self.colorHex = profile.colorHex
@@ -205,6 +206,9 @@ final class FocusModeFormViewModel {
         )
     }
 
+    /// The profile being edited (for refreshing shields on active profiles).
+    private var editingProfile: FocusMode?
+
     // MARK: - Actions
 
     /// Saves the form (create or update), including schedule data.
@@ -274,5 +278,16 @@ final class FocusModeFormViewModel {
         }
 
         isSaving = false
+    }
+
+    /// Refreshes the shields for the profile being edited, if it is currently active.
+    /// Called after a successful save to ensure active profiles have updated shields.
+    ///
+    /// - Parameter activationService: The activation service to use for refreshing shields.
+    func refreshShieldsIfActive(using activationService: FocusModeActivationService?) {
+        guard let activationService = activationService,
+              let profile = editingProfile,
+              profile.isActive else { return }
+        activationService.refreshShieldsIfActive(profile: profile)
     }
 }

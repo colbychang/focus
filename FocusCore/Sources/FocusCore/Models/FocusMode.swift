@@ -50,6 +50,10 @@ extension AppSchemaV1 {
         /// Whether this focus mode is currently active (blocking apps).
         public var isActive: Bool
 
+        /// Whether this focus mode was manually activated (as opposed to schedule-activated).
+        /// When `true`, `intervalDidEnd` should NOT deactivate this profile.
+        public var isManuallyActivated: Bool
+
         /// When this focus mode was created.
         public var createdAt: Date
 
@@ -73,6 +77,7 @@ extension AppSchemaV1 {
             serializedCategoryTokens: Data? = nil,
             serializedWebDomainTokens: Data? = nil,
             isActive: Bool = false,
+            isManuallyActivated: Bool = false,
             createdAt: Date = Date()
         ) {
             self.id = id
@@ -88,6 +93,7 @@ extension AppSchemaV1 {
             self.serializedCategoryTokens = serializedCategoryTokens
             self.serializedWebDomainTokens = serializedWebDomainTokens
             self.isActive = isActive
+            self.isManuallyActivated = isManuallyActivated
             self.createdAt = createdAt
             self.sessions = []
         }

@@ -5,7 +5,7 @@ import FocusCore
 // MARK: - FocusModeListViewModel
 
 /// ViewModel for the focus mode profile list.
-/// Manages fetching, deleting, and displaying focus mode profiles.
+/// Manages fetching, deleting, activating, and deactivating focus mode profiles.
 @MainActor
 @Observable
 final class FocusModeListViewModel {
@@ -30,14 +30,18 @@ final class FocusModeListViewModel {
     // MARK: - Dependencies
 
     private let service: FocusModeService
+    private let activationService: FocusModeActivationService
 
     // MARK: - Initialization
 
-    /// Creates a FocusModeListViewModel with the given service.
+    /// Creates a FocusModeListViewModel with the given services.
     ///
-    /// - Parameter service: The focus mode service for CRUD operations.
-    init(service: FocusModeService) {
+    /// - Parameters:
+    ///   - service: The focus mode service for CRUD operations.
+    ///   - activationService: The activation service for activating/deactivating profiles.
+    init(service: FocusModeService, activationService: FocusModeActivationService) {
         self.service = service
+        self.activationService = activationService
     }
 
     // MARK: - Actions
@@ -51,6 +55,18 @@ final class FocusModeListViewModel {
             errorMessage = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Toggles the activation state of a focus mode profile.
+    ///
+    /// - Parameter profile: The profile to toggle.
+    func toggleActivation(profile: FocusMode) {
+        if profile.isActive {
+            activationService.deactivate(profile: profile)
+        } else {
+            activationService.activate(profile: profile)
+        }
+        loadProfiles()
     }
 
     /// Initiates the delete flow for a profile (shows confirmation).

@@ -40,6 +40,8 @@
 		A10000D0 /* FocusModeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D0 /* FocusModeServiceTests.swift */; };
 		A10000D2 /* ScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D2 /* ScheduleTests.swift */; };
 		A10000D1 /* FocusModeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D1 /* FocusModeUITests.swift */; };
+		A10000E0 /* FocusModeActivationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000E0 /* FocusModeActivationTests.swift */; };
+		A10000E1 /* FocusModeActivationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000E1 /* FocusModeActivationUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
 		A1000082 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000003 /* FocusCore */; };
@@ -169,6 +171,8 @@
 		A20000D0 /* FocusModeServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeServiceTests.swift; sourceTree = "<group>"; };
 		A20000D2 /* ScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleTests.swift; sourceTree = "<group>"; };
 		A20000D1 /* FocusModeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeUITests.swift; sourceTree = "<group>"; };
+		A20000E0 /* FocusModeActivationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeActivationTests.swift; sourceTree = "<group>"; };
+		A20000E1 /* FocusModeActivationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeActivationUITests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4000010 /* DeviceActivityMonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -381,6 +385,7 @@
 				A20000B0 /* AppShellTests.swift */,
 				A20000D0 /* FocusModeServiceTests.swift */,
 				A20000D2 /* ScheduleTests.swift */,
+				A20000E0 /* FocusModeActivationTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -391,6 +396,7 @@
 				A2000070 /* FocusUITests.swift */,
 				A20000B1 /* AppShellUITests.swift */,
 				A20000D1 /* FocusModeUITests.swift */,
+				A20000E1 /* FocusModeActivationUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -781,6 +787,7 @@
 				A10000B0 /* AppShellTests.swift in Sources */,
 				A10000D0 /* FocusModeServiceTests.swift in Sources */,
 				A10000D2 /* ScheduleTests.swift in Sources */,
+				A10000E0 /* FocusModeActivationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -791,6 +798,7 @@
 				A1000070 /* FocusUITests.swift in Sources */,
 				A10000B1 /* AppShellUITests.swift in Sources */,
 				A10000D1 /* FocusModeUITests.swift in Sources */,
+				A10000E1 /* FocusModeActivationUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

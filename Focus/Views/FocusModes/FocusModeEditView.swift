@@ -5,8 +5,10 @@ import FocusCore
 
 /// Form view for editing an existing focus mode profile.
 /// Pre-populated with the profile's current values.
+/// When saving an active profile, shields are refreshed immediately.
 struct FocusModeEditView: View {
     @Bindable var viewModel: FocusModeFormViewModel
+    var activationService: FocusModeActivationService?
     let onDismiss: () -> Void
 
     var body: some View {
@@ -17,6 +19,11 @@ struct FocusModeEditView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         viewModel.save()
+                        // If the profile is active and save succeeded,
+                        // refresh shields immediately
+                        if viewModel.didSave {
+                            viewModel.refreshShieldsIfActive(using: activationService)
+                        }
                     }
                     .disabled(viewModel.isSaving)
                     .accessibilityIdentifier("SaveButton")

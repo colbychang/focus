@@ -150,6 +150,10 @@ public final class ScheduleManager {
     ) -> Bool {
         // If the profile was manually activated, don't remove shields on intervalDidEnd
         // (manual activation takes precedence over scheduled activation)
+        if profile.isActive && profile.isManuallyActivated {
+            return false
+        }
+
         if profile.isActive && !profile.scheduleDays.isEmpty {
             // Check if we're still within the scheduled time window
             let calendar = Calendar.current

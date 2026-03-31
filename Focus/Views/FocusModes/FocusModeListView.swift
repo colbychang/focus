@@ -8,6 +8,7 @@ import FocusCore
 struct FocusModeListView: View {
     @Bindable var viewModel: FocusModeListViewModel
     let service: FocusModeService
+    let activationService: FocusModeActivationService
 
     @State private var showCreateSheet = false
 
@@ -94,12 +95,18 @@ struct FocusModeListView: View {
                 NavigationLink {
                     FocusModeEditView(
                         viewModel: FocusModeFormViewModel(service: service, profile: profile),
+                        activationService: activationService,
                         onDismiss: {
                             viewModel.loadProfiles()
                         }
                     )
                 } label: {
-                    FocusModeRow(profile: profile)
+                    FocusModeRow(
+                        profile: profile,
+                        onToggleActivation: {
+                            viewModel.toggleActivation(profile: profile)
+                        }
+                    )
                 }
                 .accessibilityIdentifier("FocusModeRow_\(profile.name)")
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -119,15 +126,17 @@ struct FocusModeListView: View {
 // MARK: - FocusModeRow
 
 /// A single row in the focus mode profile list.
+/// Includes a toggle button for activating/deactivating the profile.
 struct FocusModeRow: View {
     let profile: FocusMode
+    var onToggleActivation: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {
-            // Color indicator circle with icon
+            // Color indicator circle with icon — uses green when active
             ZStack {
                 Circle()
-                    .fill(Color(hex: profile.colorHex) ?? .blue)
+                    .fill(profile.isActive ? Color.green : (Color(hex: profile.colorHex) ?? .blue))
                     .frame(width: 40, height: 40)
 
                 Image(systemName: profile.iconName)
@@ -147,17 +156,26 @@ struct FocusModeRow: View {
                         .fontWeight(.semibold)
                         .foregroundStyle(.green)
                         .accessibilityIdentifier("ActiveBadge_\(profile.name)")
+                } else {
+                    Text("Inactive")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("InactiveBadge_\(profile.name)")
                 }
             }
 
             Spacer()
 
-            if profile.isActive {
-                Circle()
-                    .fill(.green)
-                    .frame(width: 10, height: 10)
-                    .accessibilityIdentifier("ActiveIndicator_\(profile.name)")
+            // Activation toggle button
+            Button {
+                onToggleActivation?()
+            } label: {
+                Image(systemName: profile.isActive ? "power.circle.fill" : "power.circle")
+                    .font(.system(size: 28))
+                    .foregroundStyle(profile.isActive ? .green : .secondary)
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("ActivationToggle_\(profile.name)")
         }
         .padding(.vertical, 4)
     }

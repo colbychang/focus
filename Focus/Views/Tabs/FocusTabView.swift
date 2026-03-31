@@ -32,6 +32,7 @@ struct FocusTabView: View {
 /// Inner content view that creates the service and view model eagerly.
 struct FocusTabContentView: View {
     let service: FocusModeService
+    let activationService: FocusModeActivationService
     @State var viewModel: FocusModeListViewModel
 
     init(
@@ -44,11 +45,23 @@ struct FocusTabContentView: View {
             shieldService: shieldService,
             monitoringService: monitoringService
         )
+        let activationSvc = FocusModeActivationService(
+            modelContext: modelContext,
+            shieldService: shieldService
+        )
         self.service = svc
-        self._viewModel = State(initialValue: FocusModeListViewModel(service: svc))
+        self.activationService = activationSvc
+        self._viewModel = State(initialValue: FocusModeListViewModel(
+            service: svc,
+            activationService: activationSvc
+        ))
     }
 
     var body: some View {
-        FocusModeListView(viewModel: viewModel, service: service)
+        FocusModeListView(
+            viewModel: viewModel,
+            service: service,
+            activationService: activationService
+        )
     }
 }
