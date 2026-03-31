@@ -1,0 +1,61 @@
+{
+  "milestone": "foundation",
+  "round": 1,
+  "status": "pass",
+  "testedAt": "2026-03-30T17:10:00-07:00",
+  "assertionsSummary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-FOUND-001",
+    "VAL-FOUND-002",
+    "VAL-FOUND-003",
+    "VAL-FOUND-004",
+    "VAL-FOUND-005",
+    "VAL-FOUND-006",
+    "VAL-FOUND-007",
+    "VAL-FOUND-008",
+    "VAL-CROSS-013"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [],
+  "flowReports": [
+    ".factory/validation/foundation/user-testing/flows/unit-tests.json",
+    ".factory/validation/foundation/user-testing/flows/build-ui.json"
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added 'Flow Validator Guidance: xcodebuild test' section with commands, isolation rules, pass/fail determination, and assertion-to-test mapping",
+      "source": "setup"
+    }
+  ],
+  "testSummary": {
+    "unitTests": {
+      "totalTests": 137,
+      "totalSuites": 18,
+      "passed": 137,
+      "failed": 0
+    },
+    "uiTests": {
+      "totalTests": 10,
+      "passed": 10,
+      "failed": 0
+    },
+    "build": {
+      "status": "succeeded",
+      "targetsBuilt": [
+        "Focus.app",
+        "DeviceActivityMonitorExtension.appex",
+        "DeviceActivityReportExtension.appex",
+        "ShieldActionExtension.appex",
+        "ShieldConfigurationExtension.appex",
+        "FocusWidgets.appex"
+      ]
+    }
+  },
+  "previousRound": null
+}

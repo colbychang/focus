@@ -1,0 +1,68 @@
+{
+  "groupId": "unit-tests",
+  "milestone": "foundation",
+  "tool": "xcodebuild test",
+  "testedAt": "2026-03-30T17:05:41-07:00",
+  "isolation": {
+    "repoRoot": "/Users/colbychang/focus",
+    "testTarget": "FocusTests",
+    "simulator": "platform=iOS Simulator,name=iPhone 17 Pro",
+    "scope": "unit tests only"
+  },
+  "toolsUsed": ["xcodebuild"],
+  "testSummary": {
+    "totalTests": 137,
+    "totalSuites": 18,
+    "passed": 137,
+    "failed": 0,
+    "exitCode": 0,
+    "result": "** TEST SUCCEEDED **"
+  },
+  "assertionResults": [
+    {
+      "id": "VAL-FOUND-002",
+      "title": "SwiftData models — full CRUD lifecycle",
+      "status": "pass",
+      "evidence": "All CRUD lifecycle tests passed across all four model types. Relevant test suites: 'FocusMode CRUD Tests' (6 tests: create with defaults, create with custom values, update properties, delete, fetch by name predicate, fetch active modes), 'DeepFocusSession CRUD Tests' (4 tests: create with defaults, create with custom values, update status progression, delete), 'ScreenTimeEntry CRUD Tests' (4 tests: create and fetch, fetch by date range, update duration, delete), 'BlockedAppGroup CRUD Tests' (3 tests: create and fetch, update name and tokens, delete), 'Relationship Tests' (3 tests: session references FocusMode, FocusMode has inverse sessions relationship, deleting FocusMode nullifies sessions), 'Multiple Model Coexistence Tests' (2 tests: all four models coexist in one container, deletion isolation), plus 'Edge Case Tests' covering empty state, long names, duplicate names, SessionStatus enum persistence, and nil optional fields. All 137 unit tests passed with exit code 0.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-FOUND-003",
+      "title": "Protocol abstractions and mock implementations",
+      "status": "pass",
+      "evidence": "All protocol abstraction and mock implementation tests passed. Relevant test suites: 'MockAuthorizationService Tests' (10 tests: initial status, configurable status, approve/deny/throw paths, custom error, multiple requests, reset, enum raw values, protocol conformance), 'MockShieldService Tests' (12 tests: initial state, apply/clear shields, multiple stores independence, call recording, overwrite behavior, reset, protocol conformance, all three shield dimensions), 'MockMonitoringService Tests' (12 tests: initial state, start/stop monitoring, schedule limit at 20, re-registration, custom errors, ScheduleConfig equality/warning time, reset, protocol conformance, safe stop for non-existent), 'MockLiveActivityService Tests' (18 tests: start/update/end lifecycle, dismissal policies, cleanup, enabled/disabled states, Codable round-trips, payload size, protocol conformance), 'DependencyContainer Tests', and 'AuthorizationViewModel Tests'. All passed.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-FOUND-006",
+      "title": "App Group UserDefaults cross-extension data sharing",
+      "status": "pass",
+      "evidence": "All App Group UserDefaults tests passed within 'SharedStateService Tests'. Tests confirmed: write/read round-trips for session active, break state, bypass active, focus mode active, and unlock request flags; overwrite behavior (new value replaces old); key removal (removeValue, removeAll); simulated cross-target access (two UserDefaults instances sharing same suite name — service1 writes, service2 reads and vice versa); string and data operations; flag without timestamp returns false. All tests in 'SharedStateService Tests' suite passed.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-FOUND-007",
+      "title": "Token serialization validates before overwriting",
+      "status": "pass",
+      "evidence": "All token serialization validation tests passed in 'TokenSerializer Tests'. Tests confirmed: safelyUpdateTokens with nil data preserves existing tokens; safelyUpdateTokens with empty Data preserves existing tokens; safelyUpdateTokens with corrupted data (non-decodable) preserves existing tokens; safelyUpdateTokens with encoded empty array preserves existing tokens; valid new data successfully overwrites valid old data; isValid returns false for nil, empty Data, corrupted data, and empty array encoding; isValid returns true for valid serialized token data. All 22 tests in 'TokenSerializer Tests' passed.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-FOUND-008",
+      "title": "SwiftData models use VersionedSchema",
+      "status": "pass",
+      "evidence": "All VersionedSchema tests passed in 'VersionedSchema Tests'. Tests confirmed: AppSchemaV1.versionIdentifier == Schema.Version(1, 0, 0); AppSchemaV1.models.count == 4 (all four model types); ModelContainer initializes successfully with AppMigrationPlan migration plan and is usable; AppMigrationPlan.schemas.count == 1. All 4 tests in 'VersionedSchema Tests' suite passed.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-CROSS-013",
+      "title": "Shared state uses timestamp-based expiry",
+      "status": "pass",
+      "evidence": "All timestamp-based expiry tests passed in 'SharedStateService Tests'. Key tests: 'Flag without timestamp returns false' — a flag set directly in UserDefaults without a timestamp returns false from isSessionActive(); 'Flag with expiry - active within maxAge' — flag set with current timestamp returns true when maxAge not exceeded; 'Flag with expiry - expired past maxAge' — time advanced past maxAge causes getFlagWithExpiry to return false even though flag is true; 'Timestamp-based expiry prevents stale state from crashes' — flag set active, time advanced 24 hours, getFlagWithExpiry with 1-hour maxAge returns false; 'Flag set to true with past timestamp returns false with expiry' — set at past time, advance 2 hours, 1-hour expiry returns false; set again at current time returns true; 'Flag set to false with future timestamp returns false' — flag set then cleared returns false. All expiry-related tests confirmed the timestamp-based pattern works correctly for isSessionActive, isOnBreak, isBypassActive, isFocusModeActive, and isUnlockRequested.",
+      "failureDetails": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 6 assertions (VAL-FOUND-002, VAL-FOUND-003, VAL-FOUND-006, VAL-FOUND-007, VAL-FOUND-008, VAL-CROSS-013): all 6 passed. The full unit test suite ran 137 tests across 18 suites with 0 failures (exit code 0). All assigned assertions have comprehensive test coverage and all tests pass."
+}

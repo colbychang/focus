@@ -1,0 +1,41 @@
+{
+  "groupId": "build-ui",
+  "milestone": "foundation",
+  "tool": "xcodebuild build + xcodebuild test FocusUITests",
+  "testedAt": "2026-03-30T17:08:10-07:00",
+  "isolation": {
+    "repoRoot": "/Users/colbychang/focus",
+    "simulator": "platform=iOS Simulator,name=iPhone 17 Pro",
+    "scheme": "Focus",
+    "testTarget": "FocusUITests"
+  },
+  "toolsUsed": ["xcodebuild"],
+  "assertionResults": [
+    {
+      "id": "VAL-FOUND-001",
+      "title": "Project builds for iOS Simulator (all targets: Focus app + extensions + FocusCore)",
+      "status": "pass",
+      "evidence": "xcodebuild build -scheme Focus exited with code 0. All targets compiled successfully: Focus.app (main app), DeviceActivityMonitorExtension.appex, DeviceActivityReportExtension.appex, ShieldActionExtension.appex, ShieldConfigurationExtension.appex, FocusWidgets.appex. Output ended with '** BUILD SUCCEEDED **'.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-FOUND-004",
+      "title": "App launches with 4-tab navigation",
+      "status": "pass",
+      "evidence": "UI tests passed: testTabBarHasFourTabs verified all 4 tabs (Focus, Deep Focus, Stats, Settings) exist in the tab bar. testTabSwitching verified navigation to each tab (Deep Focus, Stats, Settings, Focus) produces the expected NavigationBar for each. testFocusTabSelectedByDefault verified Focus is the default tab. All 3 tab-related tests in AppShellUITests passed. Test suite: Executed 9 tests, with 0 failures in 55.585 seconds. ** TEST SUCCEEDED **",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-FOUND-005",
+      "title": "Authorization flow — approve and deny paths",
+      "status": "pass",
+      "evidence": "All 6 authorization-related UI tests in AppShellUITests passed: testAuthorizationViewShownOnLaunch (authorization prompt displayed on launch), testAuthorizationApproveShowsTabBar (approving shows the main tab bar), testAuthorizationDenyShowsDeniedView (denying shows denied explanation view), testDeniedRetryTransitionsToTabBar (retry from denied view transitions to tab bar), testPreApprovedLaunchShowsTabBar (pre-approved state shows tab bar directly), testPreDeniedLaunchShowsDeniedView (pre-denied state shows denied view). All passed. ** TEST SUCCEEDED **",
+      "failureDetails": null
+    }
+  ],
+  "frictions": [
+    "Repeated IDELaunchParametersSnapshot warnings: 'The operation couldn't be completed. (DebuggerLLDB.DebuggerVersionStore.StoreError error 0.) / no debugger version' appeared before each test case launch. These are benign xcodebuild log warnings and did not affect test results."
+  ],
+  "blockers": [],
+  "summary": "All 3 assertions passed. Build succeeded (exit 0) for all targets. 10/10 UI tests passed: 9 in AppShellUITests (covering tabs 4-tab nav and full approve/deny authorization flows) + 1 in FocusUITests (basic launch). No failures."
+}
