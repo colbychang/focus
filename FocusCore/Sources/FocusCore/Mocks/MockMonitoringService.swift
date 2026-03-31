@@ -3,7 +3,7 @@ import Foundation
 // MARK: - MonitoringError
 
 /// Errors that can occur during monitoring operations.
-public enum MonitoringError: Error, LocalizedError {
+public enum MonitoringError: Error, LocalizedError, Equatable {
     /// The maximum number of active schedules (20) has been reached.
     case scheduleLimitReached
     /// A simulated failure for testing.

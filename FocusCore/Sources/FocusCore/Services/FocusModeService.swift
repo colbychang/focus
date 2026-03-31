@@ -164,6 +164,61 @@ public final class FocusModeService {
         try modelContext.save()
     }
 
+    /// Updates a focus mode profile's schedule and re-registers monitoring.
+    ///
+    /// - Parameters:
+    ///   - id: The UUID of the profile to update.
+    ///   - scheduleDays: Array of weekday integers (1=Sunday, 7=Saturday).
+    ///   - startHour: Schedule start hour (0-23).
+    ///   - startMinute: Schedule start minute (0-59).
+    ///   - endHour: Schedule end hour (0-23).
+    ///   - endMinute: Schedule end minute (0-59).
+    /// - Throws: `FocusModeServiceError.profileNotFound`, `ScheduleValidationError`,
+    ///           or `ScheduleManagerError.scheduleLimitReached`.
+    public func updateSchedule(
+        id: UUID,
+        scheduleDays: [Int],
+        startHour: Int,
+        startMinute: Int,
+        endHour: Int,
+        endMinute: Int
+    ) throws {
+        guard let profile = try fetchProfile(by: id) else {
+            throw FocusModeServiceError.profileNotFound(id)
+        }
+
+        // Update schedule properties on the profile
+        profile.scheduleDays = scheduleDays
+        profile.scheduleStartHour = startHour
+        profile.scheduleStartMinute = startMinute
+        profile.scheduleEndHour = endHour
+        profile.scheduleEndMinute = endMinute
+        try modelContext.save()
+
+        // Re-register monitoring if schedule has days
+        if !scheduleDays.isEmpty {
+            let schedule = ScheduleConfig(
+                days: scheduleDays.compactMap { Weekday(dayNumber: $0) },
+                startHour: startHour,
+                startMinute: startMinute,
+                endHour: endHour,
+                endMinute: endMinute,
+                repeats: true
+            )
+
+            // Stop old monitoring first
+            let activityName = profile.id.uuidString
+            monitoringService.stopMonitoring(activityNames: [activityName])
+
+            // Start new monitoring
+            try monitoringService.startMonitoring(activityName: activityName, schedule: schedule)
+        } else {
+            // No days selected — stop monitoring
+            let activityName = profile.id.uuidString
+            monitoringService.stopMonitoring(activityNames: [activityName])
+        }
+    }
+
     // MARK: - Delete
 
     /// Deletes a focus mode profile and cleans up associated shields and monitoring.

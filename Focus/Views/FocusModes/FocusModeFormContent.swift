@@ -39,6 +39,9 @@ struct FocusModeFormContent: View {
                 Text("Preview")
             }
 
+            // MARK: Schedule Section
+            FocusModeScheduleView(viewModel: viewModel)
+
             // MARK: Error Section
             if let errorMessage = viewModel.errorMessage {
                 Section {
