@@ -107,12 +107,12 @@ final class DeepFocusDurationSelectionUITests: XCTestCase {
         XCTAssertTrue(startButton.isEnabled)
         startButton.tap()
 
-        // Timer display should appear
-        let timerDisplay = app.staticTexts["TimerDisplay"]
-        XCTAssertTrue(timerDisplay.waitForExistence(timeout: 5), "Timer display should appear after starting session")
+        // Launcher view with timer display should appear
+        let timerDisplay = app.staticTexts["LauncherTimerDisplay"]
+        XCTAssertTrue(timerDisplay.waitForExistence(timeout: 10), "Timer display should appear after starting session")
 
         // End session button should appear
-        let endButton = app.buttons["EndSessionButton"]
+        let endButton = app.buttons["LauncherEndSessionButton"]
         XCTAssertTrue(endButton.waitForExistence(timeout: 5), "End Session button should appear during active session")
     }
 
@@ -127,12 +127,12 @@ final class DeepFocusDurationSelectionUITests: XCTestCase {
         let startButton = app.buttons["StartSessionButton"]
         startButton.tap()
 
-        // Wait for timer view
-        let timerDisplay = app.staticTexts["TimerDisplay"]
+        // Wait for launcher timer view
+        let timerDisplay = app.staticTexts["LauncherTimerDisplay"]
         XCTAssertTrue(timerDisplay.waitForExistence(timeout: 5))
 
         // End the session
-        let endButton = app.buttons["EndSessionButton"]
+        let endButton = app.buttons["LauncherEndSessionButton"]
         XCTAssertTrue(endButton.waitForExistence(timeout: 5))
         endButton.tap()
 

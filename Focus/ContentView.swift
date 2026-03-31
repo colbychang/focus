@@ -36,6 +36,7 @@ struct MainTabView: View {
     let notificationService: FocusNotificationService
     @State private var selectedTab: Tab = .focus
     @State private var sessionManager: DeepFocusSessionManager
+    @State private var blockingService: DeepFocusBlockingService
 
     enum Tab: String, CaseIterable {
         case focus
@@ -50,6 +51,9 @@ struct MainTabView: View {
         self._sessionManager = State(initialValue: DeepFocusSessionManager(
             sharedStateService: dependencies.sharedStateService
         ))
+        self._blockingService = State(initialValue: DeepFocusBlockingService(
+            shieldService: dependencies.shieldService
+        ))
     }
 
     var body: some View {
@@ -63,7 +67,10 @@ struct MainTabView: View {
                     Label("Focus", systemImage: "moon.fill")
                 }
 
-            DeepFocusTabView(sessionManager: sessionManager)
+            DeepFocusTabView(
+                sessionManager: sessionManager,
+                blockingService: blockingService
+            )
                 .tag(Tab.deepFocus)
                 .tabItem {
                     Label("Deep Focus", systemImage: "target")

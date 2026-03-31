@@ -26,6 +26,8 @@ struct DurationSelectionView: View {
     // MARK: - Dependencies
 
     let sessionManager: DeepFocusSessionManager
+    var blockingService: DeepFocusBlockingService?
+    var onSessionStarted: ((AllowedAppsConfig) -> Void)?
 
     // MARK: - Computed Properties
 
@@ -186,6 +188,13 @@ struct DurationSelectionView: View {
 
         do {
             try sessionManager.startSession(durationMinutes: minutes)
+
+            // Apply blocking on session start.
+            // For now, use an empty AllowedAppsConfig (all blocked).
+            // In the future, the user will configure allowed apps before starting.
+            let config = AllowedAppsConfig()
+            blockingService?.applyBlocking(allowedTokens: config.allTokenData.isEmpty ? nil : config.allTokenData)
+            onSessionStarted?(config)
         } catch {
             validationError = error.localizedDescription
         }

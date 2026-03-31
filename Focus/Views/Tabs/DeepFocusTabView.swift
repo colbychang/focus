@@ -4,20 +4,34 @@ import FocusCore
 // MARK: - DeepFocusTabView
 
 /// View for the Deep Focus tab.
-/// Shows duration selection when idle, or the active session view when a session is running.
+/// Shows duration selection when idle, or the launcher view when a session is running.
+/// The launcher view displays only allowed apps grouped by category with the session timer.
 struct DeepFocusTabView: View {
     let sessionManager: DeepFocusSessionManager
+    let blockingService: DeepFocusBlockingService
+
+    /// The allowed apps configuration for the current session.
+    @State private var allowedAppsConfig: AllowedAppsConfig = AllowedAppsConfig()
 
     var body: some View {
         NavigationStack {
             Group {
                 if sessionManager.isSessionRunning {
-                    DeepFocusSessionView(sessionManager: sessionManager)
+                    DeepFocusLauncherView(
+                        sessionManager: sessionManager,
+                        categoryGroups: AppCategoryGrouper.group(config: allowedAppsConfig)
+                    )
                 } else if sessionManager.sessionStatus == .completed {
                     // Show completion briefly, then reset
                     DeepFocusCompletionView(sessionManager: sessionManager)
                 } else {
-                    DurationSelectionView(sessionManager: sessionManager)
+                    DurationSelectionView(
+                        sessionManager: sessionManager,
+                        blockingService: blockingService,
+                        onSessionStarted: { config in
+                            allowedAppsConfig = config
+                        }
+                    )
                 }
             }
             .navigationTitle("Deep Focus")
@@ -28,6 +42,13 @@ struct DeepFocusTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             sessionManager.handleForegroundEntry()
+        }
+        .onChange(of: sessionManager.sessionStatus) { _, newStatus in
+            // Clear blocking when session ends (completed or abandoned)
+            if newStatus == .completed || newStatus == .abandoned {
+                blockingService.clearBlocking()
+                allowedAppsConfig = AllowedAppsConfig()
+            }
         }
     }
 }

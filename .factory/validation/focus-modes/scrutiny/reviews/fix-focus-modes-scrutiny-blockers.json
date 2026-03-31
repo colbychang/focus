@@ -1,0 +1,66 @@
+{
+  "featureId": "fix-focus-modes-scrutiny-blockers",
+  "reviewedAt": "2026-03-31T20:30:00.000Z",
+  "commitId": "9060707031cafca5ca12755cf939a41bdccaabda",
+  "transcriptSkeletonReviewed": false,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "All 5 blocking issues identified by prior scrutiny reviews are structurally resolved. (1) Activity naming: FocusModeService.updateSchedule() and deleteProfile() now use a private activityName(for:) helper producing 'focus_<uuid>', matching ScheduleManager.activityName(for:). (2) Schema migration: AppSchemaV2 is properly created with isManuallyActivated on FocusMode; AppSchemaV1.FocusMode is retained without the property as a migration reference; a lightweight MigrationStage V1→V2 is added; FocusApp uses AppSchemaV2 + AppMigrationPlan. (3) Reconcile call site: .task { sessionRecorder.reconcileSessions(modelContext:) } wired onto the WindowGroup in FocusApp; dead sessionRecorder parameter removed from ContentView. (4) IPC for banners: DarwinNotificationCenter.swift adds DarwinNotificationName constants, DarwinNotificationPoster, and DarwinNotificationObserver backed by CFNotificationCenter; extension posts focusModeStarted/focusModeEnded; FocusApp registers observers calling FocusNotificationService. (5) Profile names: FocusModeService mirrors profile display names to App Group UserDefaults (profile_name_<uuid>) on create/update and removes on delete; extension lookupProfileName reads from UserDefaults for human-readable categoryName. 108 unit tests and 35 UI tests pass. Build succeeds. Non-blocking issues are noted below.",
+    "issues": [
+      {
+        "file": "Focus/FocusApp.swift",
+        "line": 134,
+        "severity": "non_blocking",
+        "description": "lastActiveProfileName(from:) reads from SharedStateKey.activeSessionStarts to provide a profile name to the focusModeEnded banner handler. However, recordSessionEnd() (called in the extension just before posting focusModeEnded) moves the session from activeSessionStarts to pendingRecords. By the time the Darwin notification reaches the main app and lastActiveProfileName is invoked, the ended session is no longer in activeSessionStarts. As a result, the deactivation banner will always fall back to showing 'Focus Mode' instead of the actual profile name. The activation banner (focusModeStarted) works correctly because recordSessionStart writes to activeSessionStarts before posting the notification. Fix: store the ended session's profile name in a dedicated 'last_ended_profile_name' UserDefaults key before posting the Darwin notification, or read from the profile_name_<uuid> key (available since fix #5) via a separate lookup — but this requires knowing which profile ended, which the payload-less Darwin notification doesn't convey."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Models/AppSchema.swift",
+        "line": 13,
+        "severity": "non_blocking",
+        "description": "AppSchemaV1.models now lists only [AppSchemaV1.FocusMode.self], omitting the other 3 models (DeepFocusSession, ScreenTimeEntry, BlockedAppGroup) that were previously extension AppSchemaV1. Those 3 models have been moved to extension AppSchemaV2. In SwiftData, the VersionedSchema.models array represents the COMPLETE set of entities in that version. The other 3 models did exist in V1 (they were part of AppSchemaV1 before this commit). Removing them from AppSchemaV1.models means the migration plan's V1 snapshot is incomplete. If SwiftData uses the fully-qualified type name (including namespace) to map physical SQLite entities to schema entities, the 3 models renamed from AppSchemaV1.X to AppSchemaV2.X might be treated as new entities rather than unchanged ones, potentially triggering a destructive migration for those tables. This is unlikely to cause immediate issues because (a) SwiftData lightweight migrations typically match entity names by the class's @Model entity name (not the Swift type namespace), and (b) this is a development app with no real production users. However, a strictly correct implementation would define all 3 unchanged models in both AppSchemaV1 and AppSchemaV2 (as separate types with the same properties), and verify via a file-backed migration test that existing DeepFocusSession/ScreenTimeEntry/BlockedAppGroup records survive the V1→V2 upgrade."
+      },
+      {
+        "file": "DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.swift",
+        "line": 58,
+        "severity": "non_blocking",
+        "description": "lookupProfileName(for:) hardcodes the key format \"profile_name_\\(profileUUID)\" instead of using FocusModeService.profileNameKeyPrefix. The string value is identical (both produce 'profile_name_<uuid>'), so this is not a bug today. But if the key format is ever changed in FocusModeService, the extension won't automatically pick up the change. The extension could use FocusModeService.profileNameKeyPrefix + profileUUID to ensure the two sides always stay in sync."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/AuthorizationStateHandler.swift",
+        "line": 63,
+        "severity": "non_blocking",
+        "description": "Pre-existing issue (acknowledged in handoff but not in scope): handleAuthorizationRevoked() calls monitoringService.stopMonitoring(activityNames: [storeName]) using storeName = profile.id.uuidString — the bare UUID, not the 'focus_<uuid>' format. This means revocation will attempt to stop the wrong DeviceActivityCenter registrations. The profile's active monitors (registered by FocusModeService with 'focus_<uuid>') will remain running after authorization revocation. Fix: use 'focus_\\(profile.id.uuidString)' or a shared activityName helper."
+      },
+      {
+        "file": "FocusTests/ScrutinyFixTests.swift",
+        "line": 210,
+        "severity": "non_blocking",
+        "description": "SchemaMigrationTests uses in-memory stores only and does not test the actual V1→V2 data migration path. A migration integration test that: (1) creates a file-backed store using AppSchemaV1 + a mock FocusMode without isManuallyActivated, (2) opens the same file with AppSchemaV2 + AppMigrationPlan, and (3) verifies that existing FocusMode records have isManuallyActivated == false — would provide much stronger confidence that the lightweight migration correctly handles the default value for existing persisted data."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "AuthorizationStateHandler.handleAuthorizationRevoked() still uses bare profile.id.uuidString for stopMonitoring (line 63-67 of AuthorizationStateHandler.swift). Fix #1 resolved FocusModeService's naming inconsistency, but AuthorizationStateHandler was not in scope for this fix. The AGENTS.md guidance (if updated as the synthesis recommended) would help a future worker catch and fix this remaining inconsistency.",
+      "evidence": "AuthorizationStateHandler.swift line 63: 'let storeName = profile.id.uuidString' then line 67: 'monitoringService.stopMonitoring(activityNames: [storeName])'. FocusModeService.activityName(for:) returns 'focus_\\(profile.id.uuidString)'. These are incompatible."
+    },
+    {
+      "area": "conventions",
+      "observation": "The deactivation Darwin notification handler in FocusApp reads profile name from activeSessionStarts, but by the time the notification arrives, the ended session has already been moved to pendingRecords by recordSessionEnd. The profile_name_<uuid> pattern (introduced by fix #5) is the correct lookup source for the deactivation case — but Darwin notifications are payload-less, so the handler does not know which profile ended. The architecture.md section on Cross-Process Real-Time Signaling could be extended to document this limitation and suggest a 'last event metadata' pattern: write the profile UUID + event type to a dedicated UserDefaults key immediately before posting the Darwin notification, so the receiving handler can look up the profile name from profile_name_<uuid>.",
+      "evidence": "FocusApp.swift lastActiveProfileName(from:): reads defaults.data(forKey: SharedStateKey.activeSessionStarts.rawValue). FocusSessionRecorder.recordSessionEnd(): removes the profile from activeSessionStarts and moves it to pendingRecords BEFORE the Darwin notification is posted. DeviceActivityMonitorExtension.swift lines 44-47: recordSessionEnd called, then DarwinNotificationPoster.post(name: focusModeEnded)."
+    },
+    {
+      "area": "conventions",
+      "observation": "The extension's lookupProfileName(for:) hardcodes 'profile_name_\\(profileUUID)' instead of using FocusModeService.profileNameKeyPrefix. Since FocusModeService is in FocusCore (accessible from the extension), this could be replaced with FocusModeService.profileNameKeyPrefix + profileUUID to create a single source of truth for the key format. AGENTS.md could note that the profileNameKeyPrefix constant should be used in both the main app and extensions.",
+      "evidence": "DeviceActivityMonitorExtension.swift line 58: 'defaults?.string(forKey: \"profile_name_\\(profileUUID)\")' vs FocusModeService.swift line 39: 'public static let profileNameKeyPrefix = \"profile_name_\"'."
+    }
+  ],
+  "addressesFailureFrom": [
+    "/Users/colbychang/focus/.factory/validation/focus-modes/scrutiny/reviews/focus-mode-scheduling.json",
+    "/Users/colbychang/focus/.factory/validation/focus-modes/scrutiny/reviews/focus-mode-activation.json",
+    "/Users/colbychang/focus/.factory/validation/focus-modes/scrutiny/reviews/focus-mode-cross-area.json"
+  ],
+  "summary": "PASS. All 5 blocking issues from the scrutiny synthesis are structurally resolved: (1) Activity naming unified via activityName(for:) helper using 'focus_<uuid>' format in FocusModeService; (2) AppSchemaV2 properly created with lightweight V1→V2 migration for isManuallyActivated; (3) reconcileSessions() wired to FocusApp's WindowGroup .task with dead ContentView parameter removed; (4) DarwinNotificationCenter infrastructure added with extension posting and FocusApp observing for in-app banners; (5) profile names mirrored to App Group UserDefaults at create/update and removed at delete. 21 new tests cover all fixes; 108 unit + 35 UI tests pass. Non-blocking issues noted: deactivation banner profile name lookup will show 'Focus Mode' fallback due to session being moved out of activeSessionStarts before Darwin notification fires; AppSchemaV1.models incompletely omits the 3 unchanged models (correctness risk for real-store migration); AuthorizationStateHandler still uses bare UUID for stopMonitoring (pre-existing, out of scope); extension key format hardcoded instead of using the shared constant."
+}
