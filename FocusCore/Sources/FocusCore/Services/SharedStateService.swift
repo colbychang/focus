@@ -30,6 +30,12 @@ public enum SharedStateKey: String, CaseIterable, Sendable {
 
     // Last check timestamp
     case lastDayCheck = "lastDayCheck"
+
+    // Focus session recording (DeviceActivityMonitor → main app reconciliation)
+    // Stored as JSON arrays of session records in UserDefaults
+    case pendingSessionRecords = "pendingSessionRecords"
+    // Per-profile active session start timestamps (keyed by profile UUID)
+    case activeSessionStarts = "activeSessionStarts"
 }
 
 // MARK: - SharedStateService

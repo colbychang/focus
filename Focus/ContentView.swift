@@ -9,6 +9,8 @@ import FocusCore
 struct ContentView: View {
     @Bindable var viewModel: AuthorizationViewModel
     let dependencies: DependencyContainer
+    var notificationService: FocusNotificationService = FocusNotificationService()
+    var sessionRecorder: FocusSessionRecorder?
 
     var body: some View {
         switch viewModel.authorizationStatus {
@@ -17,7 +19,10 @@ struct ContentView: View {
         case .denied:
             AuthorizationDeniedView(viewModel: viewModel)
         case .approved:
-            MainTabView(dependencies: dependencies)
+            MainTabView(
+                dependencies: dependencies,
+                notificationService: notificationService
+            )
         }
     }
 }
@@ -26,8 +31,10 @@ struct ContentView: View {
 
 /// The main tab bar with Focus, Deep Focus, Stats, and Settings tabs.
 /// Focus tab is selected by default.
+/// Includes focus notification banner overlay for in-app notifications.
 struct MainTabView: View {
     let dependencies: DependencyContainer
+    let notificationService: FocusNotificationService
     @State private var selectedTab: Tab = .focus
 
     enum Tab: String, CaseIterable {
@@ -67,5 +74,6 @@ struct MainTabView: View {
                 }
         }
         .accessibilityIdentifier("MainTabView")
+        .focusNotificationOverlay(service: notificationService)
     }
 }

@@ -14,6 +14,12 @@ struct FocusApp: App {
     /// SwiftData ModelContainer with all 4 model types.
     let modelContainer: ModelContainer
 
+    /// The focus notification service for in-app banners.
+    let notificationService: FocusNotificationService
+
+    /// The focus session recorder for UserDefaults → SwiftData reconciliation.
+    let sessionRecorder: FocusSessionRecorder
+
     init() {
         // Set up dependency container with mock services, configurable via launch arguments
         let authService = FocusApp.configureAuthorizationService()
@@ -30,6 +36,16 @@ struct FocusApp: App {
         self.authorizationViewModel = AuthorizationViewModel(
             authorizationService: deps.authorizationService
         )
+
+        // Create notification service
+        // Use longer auto-dismiss in test mode so UI tests can observe the banner
+        let isTestMode = ProcessInfo.processInfo.arguments.contains("--show-focus-notification")
+        self.notificationService = FocusNotificationService(
+            autoDismissDuration: isTestMode ? 30.0 : 3.0
+        )
+
+        // Create session recorder
+        self.sessionRecorder = FocusSessionRecorder()
 
         // Set up SwiftData ModelContainer with all 4 model types
         // Use in-memory store when launched with --use-in-memory-store (for UI tests)
@@ -52,7 +68,35 @@ struct FocusApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: authorizationViewModel, dependencies: dependencies)
+            ContentView(
+                viewModel: authorizationViewModel,
+                dependencies: dependencies,
+                notificationService: notificationService,
+                sessionRecorder: sessionRecorder
+            )
+            .task {
+                // Check for launch argument to show a test notification
+                let args = ProcessInfo.processInfo.arguments
+                if args.contains("--show-focus-notification") {
+                    // Small delay to ensure the view is fully set up and observing
+                    try? await Task.sleep(for: .milliseconds(500))
+
+                    let isActivation = !args.contains("--notification-type-ended")
+                    let profileName: String
+                    if let idx = args.firstIndex(of: "--notification-profile-name"),
+                       idx + 1 < args.count {
+                        profileName = args[idx + 1]
+                    } else {
+                        profileName = "Work"
+                    }
+
+                    if isActivation {
+                        notificationService.showActivation(profileName: profileName)
+                    } else {
+                        notificationService.showDeactivation(profileName: profileName)
+                    }
+                }
+            }
         }
         .modelContainer(modelContainer)
     }

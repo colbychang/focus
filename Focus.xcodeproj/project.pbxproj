@@ -44,6 +44,9 @@
 		A10000E1 /* FocusModeActivationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000E1 /* FocusModeActivationUITests.swift */; };
 		A10000F0 /* GrayscaleGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000F0 /* GrayscaleGuideView.swift */; };
 		A10000F1 /* ShieldExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000F1 /* ShieldExtensionTests.swift */; };
+		A10000F3 /* FocusNotificationBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000F3 /* FocusNotificationBanner.swift */; };
+		A10000F4 /* CrossAreaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000F4 /* CrossAreaTests.swift */; };
+		A10000F5 /* FocusNotificationUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000F5 /* FocusNotificationUITests.swift */; };
 		A10000F2 /* GrayscaleGuideUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000F2 /* GrayscaleGuideUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
@@ -179,6 +182,9 @@
 		A20000F0 /* GrayscaleGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrayscaleGuideView.swift; sourceTree = "<group>"; };
 		A20000F1 /* ShieldExtensionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShieldExtensionTests.swift; sourceTree = "<group>"; };
 		A20000F2 /* GrayscaleGuideUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrayscaleGuideUITests.swift; sourceTree = "<group>"; };
+		A20000F3 /* FocusNotificationBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusNotificationBanner.swift; sourceTree = "<group>"; };
+		A20000F4 /* CrossAreaTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrossAreaTests.swift; sourceTree = "<group>"; };
+		A20000F5 /* FocusNotificationUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusNotificationUITests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4000010 /* DeviceActivityMonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -302,6 +308,7 @@
 				A20000A1 /* AuthorizationView.swift */,
 				A20000A2 /* AuthorizationDeniedView.swift */,
 				A20000F0 /* GrayscaleGuideView.swift */,
+				A20000F3 /* FocusNotificationBanner.swift */,
 				A90000A2 /* Tabs */,
 				A90000C0 /* FocusModes */,
 			);
@@ -394,6 +401,7 @@
 				A20000D2 /* ScheduleTests.swift */,
 				A20000E0 /* FocusModeActivationTests.swift */,
 				A20000F1 /* ShieldExtensionTests.swift */,
+				A20000F4 /* CrossAreaTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -406,6 +414,7 @@
 				A20000D1 /* FocusModeUITests.swift */,
 				A20000E1 /* FocusModeActivationUITests.swift */,
 				A20000F2 /* GrayscaleGuideUITests.swift */,
+				A20000F5 /* FocusNotificationUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -743,6 +752,7 @@
 				A10000C5 /* FocusModeFormContent.swift in Sources */,
 				A10000C6 /* FocusModeScheduleView.swift in Sources */,
 				A10000F0 /* GrayscaleGuideView.swift in Sources */,
+				A10000F3 /* FocusNotificationBanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -799,6 +809,7 @@
 				A10000D2 /* ScheduleTests.swift in Sources */,
 				A10000E0 /* FocusModeActivationTests.swift in Sources */,
 				A10000F1 /* ShieldExtensionTests.swift in Sources */,
+				A10000F4 /* CrossAreaTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -811,6 +822,7 @@
 				A10000D1 /* FocusModeUITests.swift in Sources */,
 				A10000E1 /* FocusModeActivationUITests.swift in Sources */,
 				A10000F2 /* GrayscaleGuideUITests.swift in Sources */,
+				A10000F5 /* FocusNotificationUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
