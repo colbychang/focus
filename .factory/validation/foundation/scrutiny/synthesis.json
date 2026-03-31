@@ -1,0 +1,147 @@
+{
+  "milestone": "foundation",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "build": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet",
+      "exitCode": 0
+    },
+    "test": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusTests CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO",
+      "exitCode": 0,
+      "details": "137 unit tests passed across 18 suites"
+    },
+    "test-ui": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusUITests CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO",
+      "exitCode": 0,
+      "details": "10 UI tests passed across 2 suites"
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet",
+      "exitCode": 0,
+      "note": "Typecheck is the same as build in this project (no separate lint tool configured)"
+    }
+  },
+  "reviewsSummary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Created .factory/library/testing-patterns.md documenting three testing quirks: (1) launch argument pattern for XCUITest configuration, (2) VStack/HStack accessibilityIdentifier overriding child identifiers, (3) Do not use 'swift build' inside FocusCore (targets macOS, SwiftData unavailable — always use xcodebuild with iOS Simulator)",
+      "sourceFeatures": ["foundation-app-shell", "foundation-protocol-abstractions", "foundation-xcode-project"]
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add a conventions entry specifying the Swift language mode policy. The project currently uses SWIFT_VERSION = 5.0, but AGENTS.md says 'Use Swift 6.2 concurrency features (async/await, actors)'. Document the intended language mode (5 or 6) and whether Swift 6 strict concurrency checking should be enabled. As-is, there is a silent conflict between the documented intent and the build settings.",
+      "evidence": "foundation-xcode-project review: SWIFT_VERSION is set to 5.0 in all 10 target+config combinations in Focus.xcodeproj/project.pbxproj. AGENTS.md states 'Use Swift 6.2 concurrency features'. The project builds fine but strict concurrency checking is not enforced.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add a rule: 'Test-only mock classes MUST live in FocusCore/Sources/FocusCore/Mocks/ (or in the test targets themselves), never in production source files.' The established pattern is MockAuthorizationService in FocusCore/Mocks/. Placing test helpers in production source (e.g. FocusApp.swift) ships test infrastructure in the app binary.",
+      "evidence": "foundation-app-shell review: RetryApproveAuthorizationService (a test-only mock) was defined inside Focus/FocusApp.swift (production code) rather than in FocusCore/Mocks/. It is only used by AppShellUITests.swift via launch arguments.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Document the XCUITest launch argument configuration pattern under the Testing section, noting it as the project's standard for providing initial state to UI tests. Example: app.launchArguments = [\"--auth-status\", \"approved\"]. Also note that applying .accessibilityIdentifier() to container views (VStack/HStack) overrides child element identifiers — apply identifiers to leaf elements only.",
+      "evidence": "foundation-app-shell review: The launch argument pattern was invented and used in AppShellUITests.swift but not documented anywhere. The VStack identifier override quirk was documented in the handoff's discoveredIssues but not in project docs.",
+      "isSystemic": false
+    },
+    {
+      "target": "skills",
+      "suggestion": "Update the ios-worker skill to clarify TDD exceptions: (1) For project bootstrap features, no failing tests can exist before the Xcode project itself. (2) For SwiftData model features, model types must compile before tests can reference them — model definition and test writing should be interleaved or models can be written first. Document these as recognized exceptions to the 'Write Tests First' step.",
+      "evidence": "Three separate foundation features (foundation-xcode-project, foundation-swiftdata-models, foundation-protocol-abstractions) all noted the same TDD ordering conflict in their skillFeedback. This is a systemic pattern across all foundation-layer features, not an isolated deviation.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "Add a 'test-core' command to services.yaml for running FocusCore package tests directly (e.g. 'cd FocusCore && swift test')",
+      "reason": "Ambiguous and potentially harmful. Running 'swift build' or 'swift test' inside FocusCore targets macOS and fails because SwiftData is unavailable on macOS without AppKit. The existing 'test-unit' command (xcodebuild targeting iOS Simulator) already covers the FocusCoreTests target via Xcode's package dependency resolution. Adding a command that would fail would confuse future workers."
+    }
+  ],
+  "featuresReviewed": [
+    {
+      "featureId": "foundation-xcode-project",
+      "status": "pass",
+      "commitId": "32b5775",
+      "issues": [
+        {
+          "severity": "non_blocking",
+          "description": "DeviceActivityReportExtension.swift is missing the 'DeviceActivityReportExtension' principal class referenced in Info.plist. The extension compiles but won't load at runtime due to the missing principal class. Acceptable at foundation stage (no entitlement yet)."
+        },
+        {
+          "severity": "non_blocking",
+          "description": "SWIFT_VERSION is set to 5.0 across all targets, conflicting with AGENTS.md guidance to use Swift 6.2 features. Swift 6 strict concurrency checking is not enabled."
+        }
+      ]
+    },
+    {
+      "featureId": "foundation-swiftdata-models",
+      "status": "pass",
+      "commitId": "71e7159",
+      "issues": [
+        {
+          "severity": "non_blocking",
+          "description": "Feature's expectedBehavior says 'empty names rejected' for FocusMode, but the model init accepts any string including empty names. No test case covers this edge case. Validation is defensibly a service-layer concern but the feature spec called it out explicitly."
+        }
+      ]
+    },
+    {
+      "featureId": "foundation-protocol-abstractions",
+      "status": "pass",
+      "commitId": "10ce9bf",
+      "issues": [
+        {
+          "severity": "non_blocking",
+          "description": "MockAuthorizationService.authorizationStatusReadCount is declared and reset but never incremented — authorizationStatus is a stored property (reads are invisible without a computed getter)."
+        },
+        {
+          "severity": "non_blocking",
+          "description": "TokenSerializationError.noData is declared but never thrown anywhere. It is a dead enum case."
+        },
+        {
+          "severity": "non_blocking",
+          "description": "SharedStateService.removeAll() only removes SharedStateKey-enumerated keys, missing token data stored under raw string keys (e.g. profile UUID-keyed tokens). Stale token data can survive a removeAll() call."
+        }
+      ]
+    },
+    {
+      "featureId": "foundation-app-shell",
+      "status": "pass",
+      "commitId": "df363f4",
+      "issues": [
+        {
+          "severity": "non_blocking",
+          "description": "RetryApproveAuthorizationService (test-only mock) is defined in Focus/FocusApp.swift (production code) rather than in FocusCore/Mocks/. Ships test infrastructure in the production binary and sets an incorrect pattern precedent."
+        },
+        {
+          "severity": "non_blocking",
+          "description": "RetryApproveAuthorizationService uses @unchecked Sendable with mutable var properties, bypassing Swift 6 data-race safety without documentation."
+        },
+        {
+          "severity": "non_blocking",
+          "description": "DependencyContainer uses @unchecked Sendable without an explanatory comment. All stored properties are let, making synthesized Sendable feasible."
+        },
+        {
+          "severity": "non_blocking",
+          "description": "ModelContainer initialization uses fatalError() on schema migration failure. Idiomatic for SwiftUI but will crash silently in production if migration fails."
+        }
+      ]
+    }
+  ],
+  "previousRound": null
+}

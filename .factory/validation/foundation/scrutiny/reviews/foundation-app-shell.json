@@ -1,0 +1,56 @@
+{
+  "featureId": "foundation-app-shell",
+  "reviewedAt": "2026-03-30T23:55:00.000Z",
+  "commitId": "df363f488ff80be7de83fffd45c6a332d3a86a16",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation fully covers all six requirements in the feature description: @main FocusApp entry point with ModelContainer for all 4 SwiftData model types, DependencyContainer with protocol-based injection using mocks, 4-tab navigation with correct icons and default Focus selection, complete authorization flow (notDetermined → onboarding, approve → tab bar, deny → retry view), accessibility identifiers on all placeholder views and auth UI elements, and a comprehensive test suite (10 XCUITests + 11 unit tests). All 147 tests pass. The architecture cleanly separates concerns: DependencyContainer in FocusCore, ViewModel in the main app, views well-organized under Focus/Views. One blocking-adjacent design issue and two non-blocking concerns are noted below.",
+    "issues": [
+      {
+        "file": "Focus/FocusApp.swift",
+        "line": 104,
+        "severity": "non_blocking",
+        "description": "RetryApproveAuthorizationService is a test-only mock class placed inside FocusApp.swift (production code). This test infrastructure leaks into the app binary and violates the project's pattern of keeping mocks in FocusCore. It should live alongside MockAuthorizationService in FocusCore/Sources/FocusCore/Mocks/, or at minimum be guarded with #if DEBUG. As-is, it ships as production code in every release build."
+      },
+      {
+        "file": "Focus/FocusApp.swift",
+        "line": 109,
+        "severity": "non_blocking",
+        "description": "RetryApproveAuthorizationService uses @unchecked Sendable with a mutable var callCount and var authorizationStatus. These properties can be accessed from multiple tasks without synchronization, so @unchecked Sendable is opted-in unsafely. For a mock this is low practical risk, but it defeats Swift 6 data-race protections. Using an actor or isolating mutation to @MainActor would be safer."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/DependencyContainer.swift",
+        "line": 8,
+        "severity": "non_blocking",
+        "description": "DependencyContainer uses @unchecked Sendable. Since all stored properties are let (immutable), the container itself is safe, but there is no documentation explaining why @unchecked is used here rather than a conforming Sendable (all let properties would make Sendable synthesizable, provided contained protocol types are also Sendable). A brief comment would clarify intent for future maintainers."
+      },
+      {
+        "file": "Focus/FocusApp.swift",
+        "line": 40,
+        "severity": "non_blocking",
+        "description": "ModelContainer initialization uses fatalError() on failure. This is idiomatic for SwiftUI apps, but should be noted: a SwiftData schema migration failure will crash the app silently rather than presenting a recoverable error UI. This is acceptable for now but worth revisiting before production."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Test-only mock classes (RetryApproveAuthorizationService) ended up in production source (FocusApp.swift) rather than FocusCore mocks. AGENTS.md does not currently document where test infrastructure / mock implementations should live or how to handle test-only helpers that need access to the app target. This led to test code leaking into the production binary.",
+      "evidence": "Focus/FocusApp.swift lines 104–124: RetryApproveAuthorizationService final class defined inline in production code. Compare with MockAuthorizationService in FocusCore/Sources/FocusCore/Mocks/ which is the established pattern."
+    },
+    {
+      "area": "conventions",
+      "observation": "The launch argument pattern for UI test configuration (--auth-status, --auth-approve, --auth-deny, --auth-retry-approve in ProcessInfo.processInfo.arguments) is a reusable pattern that will likely be needed again. It is not documented in AGENTS.md or the library. Future workers implementing features with configurable launch behavior will need to reinvent or discover this convention.",
+      "evidence": "Focus/FocusApp.swift lines 56–100: configureAuthorizationService() parses launch arguments. AppShellUITests.swift uses these arguments extensively (e.g., [\"--auth-status\", \"approved\"])."
+    },
+    {
+      "area": "knowledge",
+      "observation": "Worker discovered (and documented in discoveredIssues) that applying .accessibilityIdentifier() on a VStack/HStack container overrides child element identifiers in XCUITest hierarchy. This is a subtle XCUITest behavior that tripped up the implementation. It would benefit future UI workers if documented in AGENTS.md under Testing conventions or in the library.",
+      "evidence": "Handoff discoveredIssues[0]: 'SwiftUI VStack-level accessibilityIdentifier overrides child element identifiers in XCUITest hierarchy.' The worker resolved it by applying identifiers to individual elements rather than containers."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The implementation fully satisfies all feature requirements: 4-tab navigation with correct icons and default selection, complete authorization flow (notDetermined/approve/deny/retry), ModelContainer with all 4 SwiftData models, DependencyContainer with protocol injection, accessibility identifiers, 10 XCUITests, and 11 unit tests — all passing. The only notable concern is RetryApproveAuthorizationService (a test-only mock) residing in production code in FocusApp.swift rather than in FocusCore mocks; this is non-blocking but leaks test infrastructure into the app binary and sets an incorrect pattern precedent."
+}

@@ -1,0 +1,45 @@
+{
+  "featureId": "foundation-protocol-abstractions",
+  "reviewedAt": "2026-03-30T23:45:00.000Z",
+  "commitId": "10ce9bf4dd284ca531617778b8e8e4c65eccdbe6",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "All five protocol abstractions (AuthorizationServiceProtocol, ShieldServiceProtocol, MonitoringServiceProtocol, LiveActivityServiceProtocol, SharedStateService) are implemented correctly with signatures matching the feature spec. Mocks record calls comprehensively. SharedStateService correctly implements the flag+timestamp pattern with expiry support. TokenSerializer validates before overwriting. 93 new tests cover the full expected behavior surface and all pass. Three non-blocking issues found: a dead tracking counter, an unused error case, and an incomplete cleanup method.",
+    "issues": [
+      {
+        "file": "FocusCore/Sources/FocusCore/Mocks/MockAuthorizationService.swift",
+        "line": 29,
+        "severity": "non_blocking",
+        "description": "`authorizationStatusReadCount` is declared and reset in `reset()`, implying it tracks how many times `authorizationStatus` is read. However, `authorizationStatus` is a stored property (not computed), so reads never increment this counter — it is always 0. No test verifies it is non-zero after reads, so tests pass, but the feature is silently broken. To fix, `authorizationStatus` would need to be a computed property backed by a private stored value with an incrementing getter, or the `authorizationStatusReadCount` property should be removed if read-tracking is not actually needed."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/TokenSerializer.swift",
+        "line": 8,
+        "severity": "non_blocking",
+        "description": "`TokenSerializationError.noData` is declared in the error enum but is never thrown anywhere in the implementation. `safelyUpdateTokens` and `isValid` both return `false` for nil/empty data rather than throwing. This is a dead enum case — the error type exists but has no code path that produces it. The `errorDescription` references `noData` correctly, so the discoverability is fine, but consumers using exhaustive `switch` over `TokenSerializationError` will handle a case that can never actually occur."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/SharedStateService.swift",
+        "line": 232,
+        "severity": "non_blocking",
+        "description": "`removeAll()` only removes keys enumerated in `SharedStateKey.allCases`. However, `setData(_:forKey:)` and `getData(forKey:)` accept arbitrary `String` keys (not `SharedStateKey`), which can store data under keys not in the enum (e.g. serialized token keys keyed by profile UUID). Such entries are invisible to `removeAll()` and will survive a call intended to clear all shared state. In tests that use a shared or reused UserDefaults suite, this could cause stale token data to persist across test cases."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "The ios-worker skill procedure says 'Write Tests First (TDD)' — tests should be created before implementation and confirmed failing before the code is written. In this session, the worker created all source files (protocols, mocks, SharedStateService, TokenSerializer) and ran a build to verify compilation BEFORE creating the test file. The handoff reports `followedProcedure: true` with no deviations, which is inaccurate. For protocol-definition features the order matters less (protocols must exist for tests to compile), but AGENTS.md should either clarify that TDD order is relaxed for pure-protocol work, or the skill should note this exception.",
+      "evidence": "Transcript skeleton shows the sequence: Create AuthorizationServiceProtocol.swift → Create ShieldServiceProtocol.swift → Create MonitoringServiceProtocol.swift → Create LiveActivityServiceProtocol.swift → Create Mocks → Create Services → xcodebuild build (succeeded) → THEN Create ProtocolAbstractionTests.swift. handoff.skillFeedback.followedProcedure = true, deviations = []."
+    },
+    {
+      "area": "knowledge",
+      "observation": "The worker discovered that `swift build` inside the FocusCore package targets macOS and fails on SwiftData (unavailable on macOS without AppKit), even though the package itself is correct. The correct approach is always to use `xcodebuild` targeting an iOS Simulator. This quirk of the project's package setup is not documented in environment.md or AGENTS.md and caused the worker to run an extra build step before discovering the correct approach.",
+      "evidence": "Transcript shows: `cd /Users/colbychang/focus/FocusCore && DEVELOPER_DIR=... swift build` (produced errors about SwiftData on macOS), followed by worker comment 'The swift build command is building for macOS which doesn't have SwiftData available … so this is expected. My new files compiled fine. Let me verify using the actual xcodebuild with iOS target.' and then switching to xcodebuild."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The implementation fully satisfies the feature requirements. All 5 protocol abstractions exist with the correct signatures. All 4 mock implementations record calls and simulate all required behaviors. SharedStateService correctly uses the flag+timestamp pattern with injectable date provider and expiry checking. TokenSerializer safely validates before overwriting. 93 new unit tests (126 total) all pass and a full build succeeds across all targets. Three non-blocking issues are noted: (1) `authorizationStatusReadCount` is declared but never actually incremented since `authorizationStatus` is a stored property; (2) `TokenSerializationError.noData` is a dead error case never thrown; (3) `SharedStateService.removeAll()` misses token data stored under raw string keys. None of these block the feature from functioning correctly for its intended purpose."
+}

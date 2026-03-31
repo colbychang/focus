@@ -1,0 +1,44 @@
+{
+  "featureId": "foundation-xcode-project",
+  "reviewedAt": "2026-03-30T23:30:00.000Z",
+  "commitId": "32b5775",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "All 10 feature requirements are satisfied. The Xcode project is correctly structured with the Focus main app (SwiftUI lifecycle, com.colbychang.focus, iOS 17.0), FocusCore local Swift Package (Sources/FocusCore + Tests/FocusCoreTests), four Screen Time extension targets with correct NSExtensionPointIdentifiers, FocusWidgets for Live Activities, FocusTests (Swift Testing), FocusUITests (XCUITest), App Groups on all 6 targets, Family Controls on main app + 4 Screen Time extensions (correctly excluded from FocusWidgets), FocusCore imported by all non-test targets plus FocusTests, and NSSupportsLiveActivities=YES in Focus/Info.plist. The build succeeded for iOS Simulator (exit code 0) and both test targets passed. Two non-blocking issues were found.",
+    "issues": [
+      {
+        "file": "DeviceActivityReportExtension/DeviceActivityReportExtension.swift",
+        "line": 1,
+        "severity": "non_blocking",
+        "description": "Info.plist references NSExtensionPrincipalClass '$(PRODUCT_MODULE_NAME).DeviceActivityReportExtension', but the swift file only defines 'TotalActivityReport' and 'TotalActivityView' — no type named 'DeviceActivityReportExtension' exists. The extension compiles (satisfying the feature's expectedBehavior), but at runtime the OS would fail to load the extension because the principal class cannot be resolved. This is acceptable for the foundation scaffold since the Family Controls entitlement isn't available yet, but the extension entry point must be corrected before the extension can be tested on device. The standard pattern requires either a class/struct named 'DeviceActivityReportExtension' matching the principal class, or an '@main' entry point with a type conforming to 'DeviceActivityReport' protocol."
+      },
+      {
+        "file": "Focus.xcodeproj/project.pbxproj",
+        "line": null,
+        "severity": "non_blocking",
+        "description": "SWIFT_VERSION is set to 5.0 in all build configurations (Debug and Release) for all targets. The AGENTS.md states 'Use Swift 6.2 concurrency features (async/await, actors)' and the environment.md lists 'Swift 6.2, SwiftUI'. While async/await and actors are accessible in Swift 5 language mode, Swift 6 strict concurrency checking (which catches data races at compile time) is not enabled. For a foundation setup, this is acceptable, but as the project grows with actors and async code, Swift 6 language mode will provide stronger safety guarantees. The intent should be clarified — either upgrade SWIFT_VERSION to 6 to enable strict concurrency, or document the deliberate choice to remain at Swift 5 language mode."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The ios-worker SKILL.md prescribes TDD (step 3: 'Write Tests First') for all features, but for project bootstrap/structure creation there is no meaningful failing test to write before the project itself exists. The worker correctly noted this in skillFeedback.suggestedChanges. The skill should document that project bootstrap features are an exception to the TDD step — tests cannot be written or compiled before the Xcode project targets exist.",
+      "evidence": "Handoff skillFeedback.suggestedChanges: 'The ios-worker skill mentions TDD (write tests first, confirm they fail), but for project structure creation features there are no meaningful failing tests to write first since the project itself needs to exist before tests can compile. Consider adding a note about project bootstrap being an exception to TDD.'"
+    },
+    {
+      "area": "services",
+      "observation": "FocusCore/Package.swift defines a 'FocusCoreTests' test target with two tests (appGroupIdentifier, version), but neither the Focus.xcscheme Testables nor any command in services.yaml covers running these package tests. The worker ran them separately during development via the FocusCore scheme or swift test. A 'test-core' command (e.g. 'cd FocusCore && swift test' or 'xcodebuild test -scheme FocusCore') should be added to services.yaml so CI and future workers know how to run the FocusCore package tests.",
+      "evidence": "Focus.xcodeproj/xcshareddata/xcschemes/Focus.xcscheme Testables only reference A3000060 (FocusTests.xctest) and A3000070 (FocusUITests.xctest). FocusCore/Package.swift line 18-22 defines the FocusCoreTests testTarget. services.yaml has no entry for FocusCore package tests."
+    },
+    {
+      "area": "conventions",
+      "observation": "The project's SWIFT_VERSION build setting is 5.0 across all targets, which conflicts with AGENTS.md guidance to 'Use Swift 6.2 concurrency features (async/await, actors)'. AGENTS.md does not document whether Swift 5 or Swift 6 language mode is the project standard. A clear statement about the intended Swift language mode (and any planned migration path to Swift 6 strict concurrency) should be added to AGENTS.md to prevent inconsistency as future workers add async/actor code.",
+      "evidence": "Focus.xcodeproj/project.pbxproj: 'SWIFT_VERSION = 5.0' (appears 10 times, once per target per config). AGENTS.md: 'Use Swift 6.2 concurrency features (async/await, actors)'. environment.md: 'Swift 6.2, SwiftUI'."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The foundation Xcode project structure fully satisfies all 10 stated requirements: correct targets (Focus, 4 extensions, FocusWidgets, FocusTests, FocusUITests), FocusCore Swift Package, entitlements (App Groups on all 6 targets, Family Controls on 5 Screen Time targets), correct NSExtensionPointIdentifiers, NSSupportsLiveActivities in Info.plist, and FocusCore imported everywhere. Both xcodebuild build and test runs succeeded (exit code 0). Two non-blocking issues were identified: (1) DeviceActivityReportExtension.swift is missing the 'DeviceActivityReportExtension' principal class referenced in Info.plist — the extension won't load at runtime, but builds fine for the current foundation stage; (2) SWIFT_VERSION is set to 5.0 rather than 6, which means Swift 6 strict concurrency checking is disabled. Three shared-state observations were recorded for skills, services, and conventions documentation gaps."
+}
