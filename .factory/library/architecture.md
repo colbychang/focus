@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Focus is a native iOS app (iOS 17.0+) for focus mode management and screen time analytics. It uses Apple's Screen Time API for OS-level app blocking, SwiftData for persistence, and ActivityKit for Dynamic Island integration.
+Focault (bundle ID: com.colbychang.focus) is a native iOS app (iOS 17.0+) for focus mode management and screen time analytics. The display name is "Focault" but the bundle ID, scheme name, and code references use "Focus". It uses Apple's Screen Time API for OS-level app blocking, SwiftData for persistence, and ActivityKit for Dynamic Island integration.
 
 ## Target Structure
 

@@ -22,7 +22,7 @@ struct AuthorizationView: View {
                 .fontWeight(.bold)
                 .accessibilityIdentifier("AuthorizationTitle")
 
-            Text("Focus needs Screen Time access to block distracting apps and help you stay focused.")
+            Text("Focault needs Screen Time access to block distracting apps and help you stay focused.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

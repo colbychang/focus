@@ -23,7 +23,7 @@ struct AuthorizationDeniedView: View {
                 .multilineTextAlignment(.center)
                 .accessibilityIdentifier("DeniedTitle")
 
-            Text("Without Screen Time access, Focus cannot block distracting apps. You can grant access in Settings or try again below.")
+            Text("Without Screen Time access, Focault cannot block distracting apps. You can grant access in Settings or try again below.")
                 .font(.body)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

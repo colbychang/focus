@@ -13,7 +13,7 @@ public struct ShieldConfigurationProvider: Sendable {
     // MARK: - Configuration Data
 
     /// The title displayed on the shield overlay.
-    public static let title = "App Blocked During Focus"
+    public static let title = "App Blocked by Focault"
 
     /// The subtitle displayed below the title.
     public static let subtitle = "Stay focused! This app is blocked."

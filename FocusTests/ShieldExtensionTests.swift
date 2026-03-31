@@ -13,7 +13,7 @@ struct ShieldConfigurationProviderTests {
     @Test("Configuration returns correct title")
     func configurationTitle() {
         let config = ShieldConfigurationProvider.configuration()
-        #expect(config.title == "App Blocked During Focus")
+        #expect(config.title == "App Blocked by Focault")
     }
 
     @Test("Configuration returns correct subtitle")
@@ -81,7 +81,7 @@ struct ShieldConfigurationProviderTests {
         let config = ShieldConfigurationProvider.configuration()
         // If this compiles, the type conforms to Sendable
         let _: any Sendable = config
-        #expect(config.title == "App Blocked During Focus")
+        #expect(config.title == "App Blocked by Focault")
     }
 }
 
