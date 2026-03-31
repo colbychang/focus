@@ -14,7 +14,7 @@ struct FocusModeServiceTests {
 
     /// Creates an in-memory ModelContainer with all required model types.
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true
@@ -303,7 +303,7 @@ struct FocusModeServiceTests {
         let (service, _, monitoringService, _) = try makeService()
 
         let profile = try service.createProfile(name: "Work")
-        let activityName = profile.id.uuidString
+        let activityName = "focus_\(profile.id.uuidString)"
 
         // Simulate active monitoring
         try monitoringService.startMonitoring(
@@ -314,7 +314,7 @@ struct FocusModeServiceTests {
 
         try service.deleteProfile(id: profile.id)
 
-        // Monitoring should be stopped
+        // Monitoring should be stopped using consistent focus_<uuid> naming
         #expect(monitoringService.stopMonitoringCalls.count == 1)
         #expect(monitoringService.stopMonitoringCalls.first == [activityName])
     }

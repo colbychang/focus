@@ -3,7 +3,7 @@ import SwiftData
 
 // MARK: - ScreenTimeEntry
 
-extension AppSchemaV1 {
+extension AppSchemaV2 {
 
     /// A record of screen time usage for a specific app or category.
     @Model
@@ -45,4 +45,4 @@ extension AppSchemaV1 {
 }
 
 /// Public typealias for the current schema version's ScreenTimeEntry.
-public typealias ScreenTimeEntry = AppSchemaV1.ScreenTimeEntry
+public typealias ScreenTimeEntry = AppSchemaV2.ScreenTimeEntry

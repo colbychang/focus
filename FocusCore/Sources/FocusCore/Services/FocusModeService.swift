@@ -32,11 +32,20 @@ public enum FocusModeServiceError: Error, LocalizedError, Equatable {
 @MainActor
 public final class FocusModeService {
 
+    // MARK: - Constants
+
+    /// Key prefix for profile name storage in App Group UserDefaults.
+    /// Full key format: "profile_name_<uuid>".
+    public static let profileNameKeyPrefix = "profile_name_"
+
     // MARK: - Dependencies
 
     private let modelContext: ModelContext
     private let shieldService: ShieldServiceProtocol
     private let monitoringService: MonitoringServiceProtocol
+
+    /// App Group UserDefaults for mirroring profile names to extensions.
+    private let profileNameDefaults: UserDefaults?
 
     // MARK: - Initialization
 
@@ -46,14 +55,18 @@ public final class FocusModeService {
     ///   - modelContext: The SwiftData model context for persistence.
     ///   - shieldService: The shield service for clearing shields on profile deletion.
     ///   - monitoringService: The monitoring service for stopping monitors on profile deletion.
+    ///   - profileNameDefaults: App Group UserDefaults for mirroring profile names.
+    ///     Defaults to App Group suite. Pass a custom instance for testing.
     public init(
         modelContext: ModelContext,
         shieldService: ShieldServiceProtocol,
-        monitoringService: MonitoringServiceProtocol
+        monitoringService: MonitoringServiceProtocol,
+        profileNameDefaults: UserDefaults? = UserDefaults(suiteName: FocusCore.appGroupIdentifier)
     ) {
         self.modelContext = modelContext
         self.shieldService = shieldService
         self.monitoringService = monitoringService
+        self.profileNameDefaults = profileNameDefaults
     }
 
     // MARK: - Create
@@ -94,6 +107,9 @@ public final class FocusModeService {
         )
         modelContext.insert(profile)
         try modelContext.save()
+
+        // Mirror profile name to App Group UserDefaults for extension access
+        mirrorProfileName(profile)
 
         return profile
     }
@@ -162,6 +178,9 @@ public final class FocusModeService {
         profile.iconName = iconName
         profile.colorHex = colorHex
         try modelContext.save()
+
+        // Mirror updated name to App Group UserDefaults for extension access
+        mirrorProfileName(profile)
     }
 
     /// Updates a focus mode profile's schedule and re-registers monitoring.
@@ -196,6 +215,7 @@ public final class FocusModeService {
         try modelContext.save()
 
         // Re-register monitoring if schedule has days
+        let monitorName = activityName(for: profile)
         if !scheduleDays.isEmpty {
             let schedule = ScheduleConfig(
                 days: scheduleDays.compactMap { Weekday(dayNumber: $0) },
@@ -207,15 +227,13 @@ public final class FocusModeService {
             )
 
             // Stop old monitoring first
-            let activityName = profile.id.uuidString
-            monitoringService.stopMonitoring(activityNames: [activityName])
+            monitoringService.stopMonitoring(activityNames: [monitorName])
 
             // Start new monitoring
-            try monitoringService.startMonitoring(activityName: activityName, schedule: schedule)
+            try monitoringService.startMonitoring(activityName: monitorName, schedule: schedule)
         } else {
             // No days selected — stop monitoring
-            let activityName = profile.id.uuidString
-            monitoringService.stopMonitoring(activityNames: [activityName])
+            monitoringService.stopMonitoring(activityNames: [monitorName])
         }
     }
 
@@ -234,8 +252,12 @@ public final class FocusModeService {
         let storeName = profile.id.uuidString
         shieldService.clearShields(storeName: storeName)
 
-        // Stop associated monitoring
-        monitoringService.stopMonitoring(activityNames: [storeName])
+        // Stop associated monitoring (using consistent focus_<uuid> naming)
+        let monitorName = activityName(for: profile)
+        monitoringService.stopMonitoring(activityNames: [monitorName])
+
+        // Remove mirrored profile name from App Group UserDefaults
+        removeProfileName(profile)
 
         // Delete from SwiftData
         modelContext.delete(profile)
@@ -244,11 +266,31 @@ public final class FocusModeService {
 
     // MARK: - Private Helpers
 
+    /// Generates the activity name for a focus mode profile.
+    /// Uses the same `focus_<uuid>` format as `ScheduleManager.activityName(for:)`
+    /// for consistency across all code paths.
+    private func activityName(for profile: FocusMode) -> String {
+        "focus_\(profile.id.uuidString)"
+    }
+
     /// Fetches a single profile by its UUID.
     private func fetchProfile(by id: UUID) throws -> FocusMode? {
         let descriptor = FetchDescriptor<FocusMode>(
             predicate: #Predicate<FocusMode> { $0.id == id }
         )
         return try modelContext.fetch(descriptor).first
+    }
+
+    /// Mirrors a profile's display name to App Group UserDefaults
+    /// so extensions can look up human-readable names without SwiftData access.
+    private func mirrorProfileName(_ profile: FocusMode) {
+        let key = Self.profileNameKeyPrefix + profile.id.uuidString
+        profileNameDefaults?.set(profile.name, forKey: key)
+    }
+
+    /// Removes a profile's mirrored name from App Group UserDefaults on deletion.
+    private func removeProfileName(_ profile: FocusMode) {
+        let key = Self.profileNameKeyPrefix + profile.id.uuidString
+        profileNameDefaults?.removeObject(forKey: key)
     }
 }

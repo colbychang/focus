@@ -10,7 +10,6 @@ struct ContentView: View {
     @Bindable var viewModel: AuthorizationViewModel
     let dependencies: DependencyContainer
     var notificationService: FocusNotificationService = FocusNotificationService()
-    var sessionRecorder: FocusSessionRecorder?
 
     var body: some View {
         switch viewModel.authorizationStatus {

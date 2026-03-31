@@ -18,12 +18,17 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         guard let profileId = UUID(uuidString: profileIdString) else { return }
 
+        // Look up human-readable profile name from App Group UserDefaults
+        let profileName = lookupProfileName(for: profileIdString) ?? profileIdString
+
         // Record session start with profile info
-        // The profile name is stored as the activity name prefix for simplicity
         sessionRecorder.recordSessionStart(
             profileId: profileId,
-            profileName: profileIdString
+            profileName: profileName
         )
+
+        // Post Darwin notification so foreground app can show banner
+        DarwinNotificationPoster.post(name: DarwinNotificationName.focusModeStarted)
     }
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
@@ -39,6 +44,18 @@ class DeviceActivityMonitorExtension: DeviceActivityMonitor {
 
         // Record session end
         sessionRecorder.recordSessionEnd(profileId: profileId)
+
+        // Post Darwin notification so foreground app can show banner
+        DarwinNotificationPoster.post(name: DarwinNotificationName.focusModeEnded)
+    }
+
+    // MARK: - Helpers
+
+    /// Looks up the human-readable profile name from App Group UserDefaults.
+    /// Profile names are mirrored at creation/update time with key "profile_name_<uuid>".
+    private func lookupProfileName(for profileUUID: String) -> String? {
+        let defaults = UserDefaults(suiteName: FocusCore.appGroupIdentifier)
+        return defaults?.string(forKey: "profile_name_\(profileUUID)")
     }
 
     override func eventDidReachThreshold(

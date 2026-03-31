@@ -15,7 +15,7 @@ public enum SessionStatus: String, Codable, CaseIterable {
 
 // MARK: - DeepFocusSession
 
-extension AppSchemaV1 {
+extension AppSchemaV2 {
 
     /// A deep focus session record tracking start time, duration, status,
     /// and usage metrics like bypass/break counts.
@@ -80,4 +80,4 @@ extension AppSchemaV1 {
 }
 
 /// Public typealias for the current schema version's DeepFocusSession.
-public typealias DeepFocusSession = AppSchemaV1.DeepFocusSession
+public typealias DeepFocusSession = AppSchemaV2.DeepFocusSession

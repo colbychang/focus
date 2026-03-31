@@ -452,7 +452,7 @@ struct ScheduleOverlapDetectionTests {
 struct ScheduleManagerTests {
 
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, migrationPlan: AppMigrationPlan.self, configurations: [config])
     }
@@ -818,7 +818,7 @@ struct ScheduleManagerTests {
 struct FocusModeServiceScheduleTests {
 
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         return try ModelContainer(for: schema, migrationPlan: AppMigrationPlan.self, configurations: [config])
     }
@@ -940,7 +940,7 @@ struct FocusModeServiceScheduleTests {
     @MainActor
     func testSchedulePersistenceAcrossRestart() throws {
         // Create a persistent (non-in-memory for this test) container
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, migrationPlan: AppMigrationPlan.self, configurations: [config])
 

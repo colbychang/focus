@@ -172,7 +172,7 @@ struct ModelContainerSetupTests {
 
     @Test("ModelContainer initializes with all 4 model types")
     func modelContainerInitialization() throws {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
             for: schema,

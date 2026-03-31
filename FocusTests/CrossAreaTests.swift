@@ -13,7 +13,7 @@ struct FocusSessionRecorderTests {
     /// Creates an in-memory model container for testing.
     @MainActor
     private func makeModelContext() throws -> ModelContext {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: config)
         return container.mainContext
@@ -252,7 +252,7 @@ struct AuthorizationStateHandlerTests {
 
     @MainActor
     private func makeModelContext() throws -> ModelContext {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: config)
         return container.mainContext
@@ -419,7 +419,7 @@ struct ProfileDeletionPreservesSessionsTests {
 
     @MainActor
     private func makeModelContext() throws -> ModelContext {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: config)
         return container.mainContext
@@ -518,7 +518,7 @@ struct SettingsChangePropagationTests {
 
     @MainActor
     private func makeModelContext() throws -> ModelContext {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: config)
         return container.mainContext
@@ -639,7 +639,7 @@ struct FocusSessionAnalyticsFlowTests {
 
     @MainActor
     private func makeModelContext() throws -> ModelContext {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: schema, configurations: config)
         return container.mainContext

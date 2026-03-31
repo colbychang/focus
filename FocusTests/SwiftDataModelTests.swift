@@ -7,7 +7,7 @@ import Foundation
 
 /// Creates an in-memory ModelContainer with all app models.
 private func makeTestContainer() throws -> ModelContainer {
-    let schema = Schema(AppSchemaV1.models)
+    let schema = Schema(AppSchemaV2.models)
     let config = ModelConfiguration(
         schema: schema,
         isStoredInMemoryOnly: true
@@ -725,15 +725,26 @@ struct VersionedSchemaTests {
         #expect(AppSchemaV1.versionIdentifier == Schema.Version(1, 0, 0))
     }
 
-    @Test("AppSchemaV1 lists all four model types")
-    func modelsList() {
+    @Test("AppSchemaV2 has correct version identifier")
+    func versionIdentifierV2() {
+        #expect(AppSchemaV2.versionIdentifier == Schema.Version(2, 0, 0))
+    }
+
+    @Test("AppSchemaV1 lists V1 model types")
+    func modelsListV1() {
         let models = AppSchemaV1.models
+        #expect(models.count == 1) // Only V1 FocusMode (for migration reference)
+    }
+
+    @Test("AppSchemaV2 lists all four model types")
+    func modelsListV2() {
+        let models = AppSchemaV2.models
         #expect(models.count == 4)
     }
 
     @Test("ModelContainer initializes with migration plan")
     func containerWithMigrationPlan() throws {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true
@@ -749,9 +760,15 @@ struct VersionedSchemaTests {
         #expect(modes.isEmpty)
     }
 
-    @Test("AppMigrationPlan has correct schemas list")
+    @Test("AppMigrationPlan has correct schemas list including V1 and V2")
     func migrationPlanSchemas() {
         let schemas = AppMigrationPlan.schemas
-        #expect(schemas.count == 1)
+        #expect(schemas.count == 2)
+    }
+
+    @Test("AppMigrationPlan has V1 to V2 migration stage")
+    func migrationPlanStages() {
+        let stages = AppMigrationPlan.stages
+        #expect(stages.count == 1)
     }
 }

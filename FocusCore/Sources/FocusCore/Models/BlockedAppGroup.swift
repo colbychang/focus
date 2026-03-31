@@ -3,7 +3,7 @@ import SwiftData
 
 // MARK: - BlockedAppGroup
 
-extension AppSchemaV1 {
+extension AppSchemaV2 {
 
     /// A named group of blocked app tokens for category-based management
     /// and analytics aggregation.
@@ -31,4 +31,4 @@ extension AppSchemaV1 {
 }
 
 /// Public typealias for the current schema version's BlockedAppGroup.
-public typealias BlockedAppGroup = AppSchemaV1.BlockedAppGroup
+public typealias BlockedAppGroup = AppSchemaV2.BlockedAppGroup

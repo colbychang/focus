@@ -20,6 +20,10 @@ struct FocusApp: App {
     /// The focus session recorder for UserDefaults → SwiftData reconciliation.
     let sessionRecorder: FocusSessionRecorder
 
+    /// Darwin notification observers for extension → app IPC.
+    let focusModeStartedObserver: DarwinNotificationObserver
+    let focusModeEndedObserver: DarwinNotificationObserver
+
     init() {
         // Set up dependency container with mock services, configurable via launch arguments
         let authService = FocusApp.configureAuthorizationService()
@@ -47,10 +51,36 @@ struct FocusApp: App {
         // Create session recorder
         self.sessionRecorder = FocusSessionRecorder()
 
+        // Set up Darwin notification observers for extension IPC
+        // These forward focus mode lifecycle events to the notification service for in-app banners.
+        // Darwin notifications carry no payload; the profile name is read from App Group UserDefaults.
+        let notifService = self.notificationService
+        let appGroupDefaults = UserDefaults(suiteName: FocusCore.appGroupIdentifier)
+
+        self.focusModeStartedObserver = DarwinNotificationObserver(
+            name: DarwinNotificationName.focusModeStarted
+        ) {
+            Task { @MainActor in
+                // Read the most recent active session start to get the profile name
+                let profileName = FocusApp.lastActiveProfileName(from: appGroupDefaults) ?? "Focus Mode"
+                notifService.showActivation(profileName: profileName)
+            }
+        }
+        self.focusModeEndedObserver = DarwinNotificationObserver(
+            name: DarwinNotificationName.focusModeEnded
+        ) {
+            Task { @MainActor in
+                let profileName = FocusApp.lastActiveProfileName(from: appGroupDefaults) ?? "Focus Mode"
+                notifService.showDeactivation(profileName: profileName)
+            }
+        }
+        focusModeStartedObserver.startObserving()
+        focusModeEndedObserver.startObserving()
+
         // Set up SwiftData ModelContainer with all 4 model types
         // Use in-memory store when launched with --use-in-memory-store (for UI tests)
         do {
-            let schema = Schema(AppSchemaV1.models)
+            let schema = Schema(AppSchemaV2.models)
             let useInMemory = ProcessInfo.processInfo.arguments.contains("--use-in-memory-store")
             let config = ModelConfiguration(
                 schema: schema,
@@ -71,9 +101,12 @@ struct FocusApp: App {
             ContentView(
                 viewModel: authorizationViewModel,
                 dependencies: dependencies,
-                notificationService: notificationService,
-                sessionRecorder: sessionRecorder
+                notificationService: notificationService
             )
+            .task {
+                // Reconcile extension-recorded sessions into SwiftData on launch
+                sessionRecorder.reconcileSessions(modelContext: modelContainer.mainContext)
+            }
             .task {
                 // Check for launch argument to show a test notification
                 let args = ProcessInfo.processInfo.arguments
@@ -99,6 +132,20 @@ struct FocusApp: App {
             }
         }
         .modelContainer(modelContainer)
+    }
+
+    // MARK: - Darwin Notification Helpers
+
+    /// Reads the most recently active profile name from App Group UserDefaults.
+    /// Used by Darwin notification handlers to determine which profile to show in the banner.
+    private static func lastActiveProfileName(from defaults: UserDefaults?) -> String? {
+        guard let defaults else { return nil }
+        guard let data = defaults.data(forKey: SharedStateKey.activeSessionStarts.rawValue),
+              let activeStarts = try? JSONDecoder().decode([String: SessionRecord].self, from: data),
+              let latestEntry = activeStarts.values.max(by: { $0.startTimestamp < $1.startTimestamp }) else {
+            return nil
+        }
+        return latestEntry.profileName
     }
 
     // MARK: - Launch Argument Configuration

@@ -14,7 +14,7 @@ struct FocusModeActivationServiceTests {
     // MARK: - Test Helpers
 
     private func makeContainer() throws -> ModelContainer {
-        let schema = Schema(AppSchemaV1.models)
+        let schema = Schema(AppSchemaV2.models)
         let config = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: true
