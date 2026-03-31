@@ -32,9 +32,14 @@ struct FocusApp: App {
         )
 
         // Set up SwiftData ModelContainer with all 4 model types
+        // Use in-memory store when launched with --use-in-memory-store (for UI tests)
         do {
             let schema = Schema(AppSchemaV1.models)
-            let config = ModelConfiguration(schema: schema)
+            let useInMemory = ProcessInfo.processInfo.arguments.contains("--use-in-memory-store")
+            let config = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: useInMemory
+            )
             self.modelContainer = try ModelContainer(
                 for: schema,
                 migrationPlan: AppMigrationPlan.self,
@@ -47,7 +52,7 @@ struct FocusApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView(viewModel: authorizationViewModel)
+            ContentView(viewModel: authorizationViewModel, dependencies: dependencies)
         }
         .modelContainer(modelContainer)
     }

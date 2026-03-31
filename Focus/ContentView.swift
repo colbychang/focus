@@ -8,6 +8,7 @@ import FocusCore
 /// denied explanation when `.denied`, and the main tab bar when `.approved`.
 struct ContentView: View {
     @Bindable var viewModel: AuthorizationViewModel
+    let dependencies: DependencyContainer
 
     var body: some View {
         switch viewModel.authorizationStatus {
@@ -16,7 +17,7 @@ struct ContentView: View {
         case .denied:
             AuthorizationDeniedView(viewModel: viewModel)
         case .approved:
-            MainTabView()
+            MainTabView(dependencies: dependencies)
         }
     }
 }
@@ -26,6 +27,7 @@ struct ContentView: View {
 /// The main tab bar with Focus, Deep Focus, Stats, and Settings tabs.
 /// Focus tab is selected by default.
 struct MainTabView: View {
+    let dependencies: DependencyContainer
     @State private var selectedTab: Tab = .focus
 
     enum Tab: String, CaseIterable {
@@ -37,7 +39,10 @@ struct MainTabView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            FocusTabView()
+            FocusTabView(
+                shieldService: dependencies.shieldService,
+                monitoringService: dependencies.monitoringService
+            )
                 .tag(Tab.focus)
                 .tabItem {
                     Label("Focus", systemImage: "moon.fill")

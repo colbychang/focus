@@ -30,6 +30,14 @@
 		A10000A6 /* SettingsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A6 /* SettingsTabView.swift */; };
 		A10000B0 /* AppShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000B0 /* AppShellTests.swift */; };
 		A10000B1 /* AppShellUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000B1 /* AppShellUITests.swift */; };
+		A10000C0 /* FocusModeListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C0 /* FocusModeListViewModel.swift */; };
+		A10000C1 /* FocusModeFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C1 /* FocusModeFormViewModel.swift */; };
+		A10000C2 /* FocusModeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C2 /* FocusModeListView.swift */; };
+		A10000C3 /* FocusModeCreateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C3 /* FocusModeCreateView.swift */; };
+		A10000C4 /* FocusModeEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C4 /* FocusModeEditView.swift */; };
+		A10000C5 /* FocusModeFormContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C5 /* FocusModeFormContent.swift */; };
+		A10000D0 /* FocusModeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D0 /* FocusModeServiceTests.swift */; };
+		A10000D1 /* FocusModeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D1 /* FocusModeUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
 		A1000082 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000003 /* FocusCore */; };
@@ -149,6 +157,14 @@
 		A20000A6 /* SettingsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTabView.swift; sourceTree = "<group>"; };
 		A20000B0 /* AppShellTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellTests.swift; sourceTree = "<group>"; };
 		A20000B1 /* AppShellUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellUITests.swift; sourceTree = "<group>"; };
+		A20000C0 /* FocusModeListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeListViewModel.swift; sourceTree = "<group>"; };
+		A20000C1 /* FocusModeFormViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeFormViewModel.swift; sourceTree = "<group>"; };
+		A20000C2 /* FocusModeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeListView.swift; sourceTree = "<group>"; };
+		A20000C3 /* FocusModeCreateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeCreateView.swift; sourceTree = "<group>"; };
+		A20000C4 /* FocusModeEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeEditView.swift; sourceTree = "<group>"; };
+		A20000C5 /* FocusModeFormContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeFormContent.swift; sourceTree = "<group>"; };
+		A20000D0 /* FocusModeServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeServiceTests.swift; sourceTree = "<group>"; };
+		A20000D1 /* FocusModeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeUITests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4000010 /* DeviceActivityMonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -260,6 +276,8 @@
 			isa = PBXGroup;
 			children = (
 				A20000A0 /* AuthorizationViewModel.swift */,
+				A20000C0 /* FocusModeListViewModel.swift */,
+				A20000C1 /* FocusModeFormViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -270,8 +288,20 @@
 				A20000A1 /* AuthorizationView.swift */,
 				A20000A2 /* AuthorizationDeniedView.swift */,
 				A90000A2 /* Tabs */,
+				A90000C0 /* FocusModes */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A90000C0 /* FocusModes */ = {
+			isa = PBXGroup;
+			children = (
+				A20000C2 /* FocusModeListView.swift */,
+				A20000C3 /* FocusModeCreateView.swift */,
+				A20000C4 /* FocusModeEditView.swift */,
+				A20000C5 /* FocusModeFormContent.swift */,
+			);
+			path = FocusModes;
 			sourceTree = "<group>";
 		};
 		A90000A2 /* Tabs */ = {
@@ -344,6 +374,7 @@
 				A2000061 /* SwiftDataModelTests.swift */,
 				A2000062 /* ProtocolAbstractionTests.swift */,
 				A20000B0 /* AppShellTests.swift */,
+				A20000D0 /* FocusModeServiceTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -353,6 +384,7 @@
 			children = (
 				A2000070 /* FocusUITests.swift */,
 				A20000B1 /* AppShellUITests.swift */,
+				A20000D1 /* FocusModeUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -682,6 +714,12 @@
 				A10000A4 /* DeepFocusTabView.swift in Sources */,
 				A10000A5 /* StatsTabView.swift in Sources */,
 				A10000A6 /* SettingsTabView.swift in Sources */,
+				A10000C0 /* FocusModeListViewModel.swift in Sources */,
+				A10000C1 /* FocusModeFormViewModel.swift in Sources */,
+				A10000C2 /* FocusModeListView.swift in Sources */,
+				A10000C3 /* FocusModeCreateView.swift in Sources */,
+				A10000C4 /* FocusModeEditView.swift in Sources */,
+				A10000C5 /* FocusModeFormContent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,6 +772,7 @@
 				A1000061 /* SwiftDataModelTests.swift in Sources */,
 				A1000062 /* ProtocolAbstractionTests.swift in Sources */,
 				A10000B0 /* AppShellTests.swift in Sources */,
+				A10000D0 /* FocusModeServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -743,6 +782,7 @@
 			files = (
 				A1000070 /* FocusUITests.swift in Sources */,
 				A10000B1 /* AppShellUITests.swift in Sources */,
+				A10000D1 /* FocusModeUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

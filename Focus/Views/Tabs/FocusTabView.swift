@@ -1,24 +1,54 @@
 import SwiftUI
+import SwiftData
+import FocusCore
 
 // MARK: - FocusTabView
 
-/// Placeholder view for the Focus tab.
+/// The Focus tab, showing the focus mode profile list.
+/// Injects dependencies from the environment.
 struct FocusTabView: View {
+    @Environment(\.modelContext) private var modelContext
+
+    /// Shield service injected from parent.
+    var shieldService: ShieldServiceProtocol = MockShieldService()
+    /// Monitoring service injected from parent.
+    var monitoringService: MonitoringServiceProtocol = MockMonitoringService()
+
     var body: some View {
         NavigationStack {
-            VStack {
-                Image(systemName: "moon.fill")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.blue)
-                Text("Focus")
-                    .font(.title)
-                    .fontWeight(.semibold)
-                Text("Manage your focus modes")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
+            FocusTabContentView(
+                modelContext: modelContext,
+                shieldService: shieldService,
+                monitoringService: monitoringService
+            )
             .navigationTitle("Focus")
         }
         .accessibilityIdentifier("FocusTabContent")
+    }
+}
+
+// MARK: - FocusTabContentView
+
+/// Inner content view that creates the service and view model eagerly.
+struct FocusTabContentView: View {
+    let service: FocusModeService
+    @State var viewModel: FocusModeListViewModel
+
+    init(
+        modelContext: ModelContext,
+        shieldService: ShieldServiceProtocol,
+        monitoringService: MonitoringServiceProtocol
+    ) {
+        let svc = FocusModeService(
+            modelContext: modelContext,
+            shieldService: shieldService,
+            monitoringService: monitoringService
+        )
+        self.service = svc
+        self._viewModel = State(initialValue: FocusModeListViewModel(service: svc))
+    }
+
+    var body: some View {
+        FocusModeListView(viewModel: viewModel, service: service)
     }
 }
