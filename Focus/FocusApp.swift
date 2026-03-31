@@ -27,12 +27,20 @@ struct FocusApp: App {
     init() {
         // Set up dependency container with mock services, configurable via launch arguments
         let authService = FocusApp.configureAuthorizationService()
+        let sharedState = SharedStateService()
+
+        // Clear shared state for UI tests to prevent stale deep focus session recovery
+        let useInMemory = ProcessInfo.processInfo.arguments.contains("--use-in-memory-store")
+        if useInMemory {
+            sharedState.removeAll()
+        }
+
         let deps = DependencyContainer(
             authorizationService: authService,
             shieldService: MockShieldService(),
             monitoringService: MockMonitoringService(),
             liveActivityService: MockLiveActivityService(),
-            sharedStateService: SharedStateService()
+            sharedStateService: sharedState
         )
         self.dependencies = deps
 

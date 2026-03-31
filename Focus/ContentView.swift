@@ -35,12 +35,21 @@ struct MainTabView: View {
     let dependencies: DependencyContainer
     let notificationService: FocusNotificationService
     @State private var selectedTab: Tab = .focus
+    @State private var sessionManager: DeepFocusSessionManager
 
     enum Tab: String, CaseIterable {
         case focus
         case deepFocus
         case stats
         case settings
+    }
+
+    init(dependencies: DependencyContainer, notificationService: FocusNotificationService) {
+        self.dependencies = dependencies
+        self.notificationService = notificationService
+        self._sessionManager = State(initialValue: DeepFocusSessionManager(
+            sharedStateService: dependencies.sharedStateService
+        ))
     }
 
     var body: some View {
@@ -54,7 +63,7 @@ struct MainTabView: View {
                     Label("Focus", systemImage: "moon.fill")
                 }
 
-            DeepFocusTabView()
+            DeepFocusTabView(sessionManager: sessionManager)
                 .tag(Tab.deepFocus)
                 .tabItem {
                     Label("Deep Focus", systemImage: "target")
@@ -74,5 +83,9 @@ struct MainTabView: View {
         }
         .accessibilityIdentifier("MainTabView")
         .focusNotificationOverlay(service: notificationService)
+        .task {
+            // Recover orphaned session on launch
+            sessionManager.recoverOrphanedSession()
+        }
     }
 }

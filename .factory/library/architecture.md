@@ -113,7 +113,9 @@ For **real-time foreground notifications** (e.g., "show a banner when a focus se
    - Main app polls UserDefaults for a "pendingNotification" key in a `.task` background loop.
    - Less responsive but avoids Darwin notification boilerplate.
 
-**Profile metadata in extensions:** Extensions do not have SwiftData access. If an extension needs a profile's display name (for analytics records, notifications, etc.), that metadata must be mirrored into App Group UserDefaults at profile-creation/update time. Suggested key pattern: `"profile_name_<uuid>"`.
+**Profile metadata in extensions:** Extensions do not have SwiftData access. If an extension needs a profile's display name (for analytics records, notifications, etc.), that metadata must be mirrored into App Group UserDefaults at profile-creation/update time. Use the shared constant `FocusModeService.profileNameKeyPrefix` to construct the key in both the main app and extensions — format: `profileNameKeyPrefix + uuid.uuidString`. Avoid hardcoding the key string in more than one place.
+
+**Last-event metadata pattern for Darwin notifications:** Darwin notifications carry no payload. When the main app receives a notification, it reads associated data from UserDefaults. However, if UserDefaults state associated with the event was updated *before* the notification was posted (e.g., a session record moved from `activeSessionStarts` to `pendingRecords` in `recordSessionEnd`), the receiving handler may not find it under the expected key. To avoid this, write a dedicated "last event metadata" entry to UserDefaults *immediately before* posting the Darwin notification, with both the profile UUID and event type. Example keys: `last_focus_event_profile_uuid`, `last_focus_event_type`. The main app then reads from these stable keys regardless of other state transitions.
 
 ## Key Constraints
 

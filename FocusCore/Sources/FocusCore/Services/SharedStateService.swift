@@ -36,6 +36,10 @@ public enum SharedStateKey: String, CaseIterable, Sendable {
     case pendingSessionRecords = "pendingSessionRecords"
     // Per-profile active session start timestamps (keyed by profile UUID)
     case activeSessionStarts = "activeSessionStarts"
+
+    // Deep focus session persistence (survives background/termination)
+    case deepFocusSessionData = "deepFocusSessionData"
+    case deepFocusBackgroundTimestamp = "deepFocusBackgroundTimestamp"
 }
 
 // MARK: - SharedStateService
