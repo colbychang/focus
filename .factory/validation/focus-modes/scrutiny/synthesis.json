@@ -1,0 +1,135 @@
+{
+  "milestone": "focus-modes",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "typecheck": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet",
+      "exitCode": 0
+    },
+    "test": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusTests CODE_SIGN_IDENTITY=\"\" CODE_SIGNING_REQUIRED=NO",
+      "exitCode": 0,
+      "note": "123 unit tests in 37 suites passed. UI tests (FocusUITests) also passed separately (all test suites: FocusModeActivationUITests, FocusModeUITests, FocusNotificationUITests, FocusUITests, GrayscaleGuideUITests). Parallel test runner (worker count 4) showed false-positive failures due to simulator memory pressure crashes; sequential runs confirm all tests pass."
+    },
+    "lint": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet",
+      "exitCode": 0,
+      "note": "No separate lint command configured in services.yaml; typecheck (build) serves as the lint/compile check."
+    }
+  },
+  "reviewsSummary": {
+    "total": 6,
+    "passed": 4,
+    "failed": 2,
+    "failedFeatures": [
+      "focus-mode-scheduling",
+      "focus-mode-cross-area"
+    ],
+    "noteOnActivation": "focus-mode-activation was marked 'pass' by the reviewer but contains a blocking-severity issue (in-place schema modification without migration). Including the blocking issue in the blocking issues list for fix tracking."
+  },
+  "blockingIssues": [
+    {
+      "featureId": "focus-mode-scheduling",
+      "severity": "blocking",
+      "description": "Activity naming inconsistency: FocusModeService.updateSchedule() registers DeviceActivity monitors using the bare profile UUID ('profile.id.uuidString'), while ScheduleManager.activityName(for:) uses a 'focus_<uuid>' prefix. When both paths are used (ViewModel saves via Service; app launch re-registers via ScheduleManager), the real DeviceActivityCenter would accumulate duplicate registrations, consuming 2 of the 20-schedule limit per profile and preventing correct cleanup on deleteProfile(). The unit test testSchedulePersistenceAcrossRestart masks this by using separate mock instances.",
+      "suggestedFix": "Unify naming: use 'focus_<uuid>' everywhere (update FocusModeService.updateSchedule() and FocusModeService.deleteProfile() to use ScheduleManager.activityName(for:) instead of profile.id.uuidString directly)."
+    },
+    {
+      "featureId": "focus-mode-activation",
+      "severity": "blocking",
+      "description": "isManuallyActivated was added to AppSchemaV1.FocusMode in-place without creating AppSchemaV2 and a migration stage. AppMigrationPlan.stages remains empty. This causes a CoreData migration error when upgrading from any previously persisted data store.",
+      "suggestedFix": "Create AppSchemaV2 that includes isManuallyActivated on FocusMode with a default value of false. Add a lightweight migration stage to AppMigrationPlan. Do not modify AppSchemaV1 after any data has been persisted."
+    },
+    {
+      "featureId": "focus-mode-cross-area",
+      "severity": "blocking",
+      "description": "FocusSessionRecorder.reconcileSessions(modelContext:) has no production call site. The method is implemented and tested in isolation, but neither FocusApp.body nor ContentView ever calls it. Sessions recorded by the DeviceActivityMonitorExtension will remain in App Group UserDefaults indefinitely and never be written into SwiftData.",
+      "suggestedFix": "Add a .task { await sessionRecorder.reconcileSessions(modelContext: modelContainer.mainContext) } on the WindowGroup or an equivalent FocusApp-level launch hook. Remove the dead sessionRecorder parameter from ContentView."
+    },
+    {
+      "featureId": "focus-mode-cross-area",
+      "severity": "blocking",
+      "description": "No IPC mechanism exists for the DeviceActivityMonitorExtension to trigger the in-app notification banner while the app is in the foreground. The extension writes to App Group UserDefaults but the main app has no observer (Darwin notification, KVO, or polling). FocusNotificationService.showActivation/showDeactivation are only invoked via the '--show-focus-notification' UI test launch argument. The banner feature is test-only and broken in production.",
+      "suggestedFix": "In the extension's intervalDidStart/intervalDidEnd, post a Darwin CFNotification (e.g., 'com.colbychang.focus.sessionStarted'). In FocusApp, register a Darwin notification observer that calls FocusNotificationService when the notification arrives. See architecture.md Cross-Process Real-Time Signaling section."
+    },
+    {
+      "featureId": "focus-mode-cross-area",
+      "severity": "blocking",
+      "description": "Profile name recorded as UUID string instead of human-readable name. DeviceActivityMonitorExtension passes profileIdString (the UUID) as the profileName argument to recordSessionStart, producing ScreenTimeEntry.categoryName = 'Focus Session: E621E1F8-...'. This makes reconciled analytics data unusable.",
+      "suggestedFix": "Mirror profile display names into App Group UserDefaults at profile creation/update time (key: 'profile_name_<uuid>'). In the extension, look up the profile name from UserDefaults using the UUID before calling recordSessionStart."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "library/testing-patterns.md",
+      "description": "Added section: 'Swift Testing + SwiftData: Use .serialized Trait to Prevent Crashes' documenting that @MainActor Swift Testing suites using SwiftData ModelContext must use .serialized to prevent EXC_BAD_ACCESS from parallel execution.",
+      "sourceFeature": "focus-mode-profile-crud"
+    },
+    {
+      "target": "library/testing-patterns.md",
+      "description": "Added section: 'XCUITest: --use-in-memory-store Launch Argument for Clean SwiftData State' documenting the in-memory store pattern for UI tests requiring clean persistent state per launch.",
+      "sourceFeature": "focus-mode-profile-crud"
+    },
+    {
+      "target": "library/testing-patterns.md",
+      "description": "Added section: 'xcodebuild: ** TEST FAILED ** False Positive with Swift Testing' documenting that exit code 0 with Swift Testing 'passed' output is authoritative; the ** TEST FAILED ** message from xcodebuild is a known artifact when both Swift Testing and XCTest targets are in the scheme.",
+      "sourceFeature": "rename-app-to-focault"
+    },
+    {
+      "target": "library/architecture.md",
+      "description": "Added section: 'Cross-Process Real-Time Signaling (Extension → Foreground App)' documenting Darwin notifications and UserDefaults KVO patterns for real-time IPC, and the profile metadata mirroring pattern for extensions that need profile display names.",
+      "sourceFeature": "focus-mode-cross-area"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add rule: 'When adding or modifying properties on a SwiftData @Model, ALWAYS create a new schema version (AppSchemaV2, etc.) with a lightweight migration stage in AppMigrationPlan that sets a default value for the new property. NEVER modify an existing VersionedSchema version (AppSchemaV1) after any data has been persisted. An empty AppMigrationPlan.stages with any schema change is always wrong.'",
+      "evidence": "focus-mode-activation added isManuallyActivated to AppSchemaV1 in-place (no V2, no migration stage). Worker's own handoff confirmed this caused CoreData migration errors on the simulator with existing persisted data. The existing AGENTS.md rule 'Do NOT store SwiftData models outside VersionedSchema' does not cover this in-place modification case.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add rule for DeviceActivityCenter activity naming: 'Use a consistent prefix for DeviceActivity activity names: format is \"focus_<profileUUID>\". All paths that register, stop, or query DeviceActivity monitors must use the same naming function (ScheduleManager.activityName(for:)). Never use profile.id.uuidString directly as an activity name.'",
+      "evidence": "focus-mode-scheduling had FocusModeService.updateSchedule() use bare UUID while ScheduleManager.activityName(for:) used 'focus_<uuid>' prefix — two incompatible naming conventions in the same feature. This causes orphaned registrations consuming extra schedule slots and prevents correct cleanup. The naming convention is not documented anywhere.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add guidance: 'App lifecycle hooks (session reconciliation, cross-extension state sync, activity cleanup) must be placed in FocusApp (the @main entry point), not passed as parameters to SwiftUI views. The modelContainer is owned by FocusApp and reconciliation calls belong there (e.g., .task { await reconciler.reconcile(context: modelContainer.mainContext) } on WindowGroup).'",
+      "evidence": "focus-mode-cross-area passed sessionRecorder into ContentView but never used it there. The reconciliation call that should happen on launch has no call site in production code. Future workers need clear guidance that FocusApp is the right place for lifecycle integration.",
+      "isSystemic": false
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add note: 'When a focus mode profile is created or updated, mirror the profile's display name into App Group UserDefaults (key: \"profile_name_<uuid>\") so that extension processes can look up the human-readable name without SwiftData access.' This should be done in FocusModeService.createProfile/updateProfile.",
+      "evidence": "focus-mode-cross-area used the UUID string as the profile name in extension-recorded sessions because the extension has no way to look up the display name. All analytics ScreenTimeEntry records got categoryName = 'Focus Session: <UUID>'. This is a systemic extension-accessibility pattern that future workers need to know.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills/ios-worker",
+      "suggestion": "In Step 3 ('Write Tests First — TDD'), add a note: 'For features spanning many interdependent files that cannot partially compile (e.g., adding new protocol requirements, schema changes, multi-view navigation), write tests alongside implementation rather than strictly before, since partial compilation would prevent test execution. In these cases, design the tests mentally first, then implement in parallel with the code they verify.'",
+      "evidence": "Two different focus-modes workers (focus-mode-activation, focus-mode-profile-crud) reported adapting TDD because multi-file features won't compile at intermediate stages. This is a systemic constraint of iOS/Swift development, not a worker deviation.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "@unchecked Sendable usage pattern for ShieldActionHandler should be documented in AGENTS.md",
+      "reason": "Too specific and case-by-case. Swift concurrency rules are nuanced; blanket guidance about @unchecked Sendable would be prescriptive without covering the full context. The extension environment (single-threaded callbacks) makes it safe here specifically, but documenting this broadly could encourage misuse."
+    },
+    {
+      "observation": "FocusModeActivationError.profileNotFound is dead code (defined but never thrown)",
+      "reason": "Non-blocking code smell, not a systemic pattern. A future refactor to accept UUID instead of FocusMode instance would give it a use; leaving this for implementation cleanup is fine."
+    },
+    {
+      "observation": "testStepProgressIndicators only checks container existence, not count",
+      "reason": "Minor test assertion weakness, not a systemic testing pattern issue. Not actionable at the AGENTS.md or skill level."
+    }
+  ],
+  "previousRound": null
+}

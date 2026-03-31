@@ -1,0 +1,45 @@
+{
+  "featureId": "focus-mode-shield-extensions",
+  "reviewedAt": "2026-03-31T19:00:00.000Z",
+  "commitId": "1d11b6f",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation correctly covers all 7 requirements from the feature description. (1) ShieldConfigurationProvider in FocusCore returns branded config with the required exact strings ('App Blocked During Focus', 'Stay focused! This app is blocked.', 'Request Access', 'Close') and brand colors. (2) ShieldActionHandler correctly delegates primary button to setUnlockRequested (flag+timestamp pattern via SharedStateService), returns .close; secondary button returns .close with no side effects. (3) Both extension targets (ShieldConfigurationExtension, ShieldActionExtension) are minimal and import FocusCore correctly. (4) GrayscaleGuideView implements all 5 required sequential steps matching the exact path specified. (5) Settings tab gained a 'Focus Tools' section with a sheet-presenting button. (6) 9 unit tests cover ShieldConfigurationProvider branding and 10 unit tests cover ShieldActionHandler responses and UserDefaults side effects. (7) 10 UI tests cover guide presentation, step content, navigation, back/done/dismiss buttons, and progress indicators. NOTE: A subsequent commit (e186a4f, 'Rename app display name from Focus to Focault') changed the title string to 'App Blocked by Focault' — this is outside the scope of this feature but should be noted in shared state as a post-hoc mutation of a string specified in the feature contract.",
+    "issues": [
+      {
+        "file": "FocusTests/ShieldExtensionTests.swift",
+        "line": 164,
+        "severity": "non_blocking",
+        "description": "In multiplePrimaryPresses test, the comment '// reset in between' above handler.handle(action: .secondaryButtonPressed) is misleading: the secondary button does NOT reset/clear the unlock request flag. The secondary button returns .close with no side effects, so the unlock flag set by the first primary press remains set through the 'second press' assertion. The test logic is still valid because it's ultimately testing that the second primary press updates the timestamp, but the comment could mislead future readers about secondary button semantics."
+      },
+      {
+        "file": "Focus/Views/GrayscaleGuideView.swift",
+        "line": 36,
+        "severity": "non_blocking",
+        "description": ".animation(.easeInOut, value: currentStep) applied on a .tabViewStyle(.page) TabView has no effect — the TabView's built-in page transition animation overrides this modifier. The visual behavior is correct (page transitions are still animated) but the modifier is dead code that may mislead future developers into thinking they control the animation curve here."
+      },
+      {
+        "file": "FocusUITests/GrayscaleGuideUITests.swift",
+        "line": 194,
+        "severity": "non_blocking",
+        "description": "testStepProgressIndicators only verifies the existence of the StepProgressView container element but does not verify the count of individual StepIndicator_N elements (there should be 5). This makes the test less rigorous — a completely empty progress bar would also pass. Not a blocking issue since the feature spec says 'progress indicators are visible' which is technically met."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "The ShieldActionHandler class uses @unchecked Sendable despite holding a mutable SharedStateService reference. In the current extension context this is safe (single-threaded callbacks), but AGENTS.md doesn't document when @unchecked Sendable is acceptable vs. when actor isolation should be used. Future workers may apply this pattern inappropriately.",
+      "evidence": "FocusCore/Sources/FocusCore/Services/ShieldActionHandler.swift line 28: 'public final class ShieldActionHandler: @unchecked Sendable'"
+    },
+    {
+      "area": "knowledge",
+      "observation": "A subsequent commit (e186a4f) renamed the display name from 'Focus' to 'Focault' and updated ShieldConfigurationProvider.title from 'App Blocked During Focus' to 'App Blocked by Focault' and ShieldExtensionTests.swift to match. This means any future feature whose spec references the display name 'Focus' may need updating. The architecture.md now correctly documents the display name as 'Focault', but the feature description for focus-mode-shield-extensions (still in features.json) still says \"title ('App Blocked During Focus')\". If features.json is used as a source of truth for future re-runs or fix reviews, the mismatch in the stored feature description could cause confusion.",
+      "evidence": "Commit e186a4f changed FocusCore/Sources/FocusCore/Services/ShieldConfigurationProvider.swift and FocusTests/ShieldExtensionTests.swift. features.json still references 'App Blocked During Focus'."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. All 7 feature requirements are fully implemented and verified at commit 1d11b6f. ShieldConfigurationProvider returns the exact required branding strings and colors; ShieldActionHandler correctly writes the unlock flag+timestamp to App Group UserDefaults on primary press and cleanly returns .close on secondary press; both extension targets compile and delegate to FocusCore; GrayscaleGuideView implements the full 5-step Accessibility path and is dismissible from any step; the Settings tab integrates the guide as a sheet. Unit and UI test coverage is comprehensive. Three minor non-blocking issues were found: a misleading comment in a test, a dead animation modifier on a TabView, and a slightly weak progress-indicator UI test assertion."
+}

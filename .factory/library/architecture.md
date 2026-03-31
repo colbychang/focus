@@ -98,6 +98,23 @@ Per-app or per-category usage record linked to a session, used for analytics.
 ### BlockedAppGroup
 Named group of app tokens for category-based analytics aggregation.
 
+## Cross-Process Real-Time Signaling (Extension → Foreground App)
+
+Extensions run in separate processes and cannot call into the main app directly. For **one-time data persistence** (session records, state flags), writing to App Group UserDefaults is sufficient — the main app reads it the next time it becomes active.
+
+For **real-time foreground notifications** (e.g., "show a banner when a focus session starts"), App Group UserDefaults alone is NOT enough. The main app needs an IPC signal to observe the change immediately. Two patterns are available:
+
+1. **Darwin notifications** (recommended for real-time):
+   - Extension posts: `CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), "com.colbychang.focus.sessionStarted" as CFNotificationName, nil, nil, true)`
+   - Main app observes: `CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), ...)` or wrap in a `DarwinNotificationObserver` actor.
+   - The notification carries no payload; the main app reads the actual data from UserDefaults when it receives the notification.
+
+2. **UserDefaults KVO / `.task` polling** (simpler but less immediate):
+   - Main app polls UserDefaults for a "pendingNotification" key in a `.task` background loop.
+   - Less responsive but avoids Darwin notification boilerplate.
+
+**Profile metadata in extensions:** Extensions do not have SwiftData access. If an extension needs a profile's display name (for analytics records, notifications, etc.), that metadata must be mirrored into App Group UserDefaults at profile-creation/update time. Suggested key pattern: `"profile_name_<uuid>"`.
+
 ## Key Constraints
 
 1. **No Family Controls entitlement yet** — all Screen Time calls go through protocol mocks

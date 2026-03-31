@@ -58,6 +58,78 @@ VStack {
 
 ---
 
+## Swift Testing + SwiftData: Use `.serialized` Trait to Prevent Crashes
+
+Swift Testing runs tests in parallel by default. When `@MainActor` test suites use a SwiftData `ModelContext`, parallel execution causes EXC_BAD_ACCESS crashes because multiple tests access the same context concurrently.
+
+**Fix:** Apply the `.serialized` suite trait to any test suite that uses `@MainActor` with a SwiftData `ModelContext`.
+
+```swift
+// Required for SwiftData + @MainActor test suites
+@Suite("FocusModeService Tests", .serialized)
+struct FocusModeServiceTests {
+    var container: ModelContainer!
+    var context: ModelContext!
+
+    init() throws {
+        container = try ModelContainer(
+            for: FocusMode.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        context = container.mainContext
+    }
+    // ...
+}
+```
+
+**Discovered in:** `focus-mode-profile-crud` — tests crashed without `.serialized`; fixing it stabilized the entire suite.
+
+---
+
+## XCUITest: `--use-in-memory-store` Launch Argument for Clean SwiftData State
+
+UI tests need a clean persistent store on each launch to avoid flaky cross-test contamination. Use a launch argument to switch to an in-memory SwiftData container.
+
+**Pattern (app side — FocusApp.swift):**
+```swift
+let useInMemory = ProcessInfo.processInfo.arguments.contains("--use-in-memory-store")
+let config = ModelConfiguration(isStoredInMemoryOnly: useInMemory)
+modelContainer = try ModelContainer(for: FocusMode.self, ..., configurations: config)
+```
+
+**Pattern (test side):**
+```swift
+let app = XCUIApplication()
+app.launchArguments = ["--auth-status", "approved", "--use-in-memory-store"]
+app.launch()
+```
+
+This ensures each UI test starts with an empty store, making tests independent and idempotent.
+
+**Discovered in:** `focus-mode-profile-crud` — established the pattern; adopted across all focus mode UI tests.
+
+---
+
+## xcodebuild: `** TEST FAILED **` False Positive with Swift Testing
+
+When the test scheme includes both Swift Testing (`FocusTests`) and XCTest (`FocusUITests`) targets, xcodebuild sometimes prints `** TEST FAILED **` even when all Swift Testing tests pass and the exit code is 0. This is a known xcodebuild + Swift Testing interaction artifact.
+
+**How to distinguish false positive from real failure:**
+- Real failure: exit code is non-zero (65 for test failures)
+- False positive: exit code is 0, Swift Testing runner output shows all tests passing
+
+**Reliable check:**
+```bash
+# Check Swift Testing output specifically
+DEVELOPER_DIR=... xcodebuild test -scheme Focus ... 2>&1 | grep -E "Test run with .* (passed|failed)"
+```
+
+If the line says `passed`, all tests passed regardless of the `** TEST FAILED **` message.
+
+**Discovered in:** `rename-app-to-focault` — worker spent time re-investigating what turned out to be a benign artifact.
+
+---
+
 ## Swift Package Build: Do NOT Use `swift build` Inside FocusCore
 
 Running `swift build` (or `swift test`) directly inside the `FocusCore/` directory targets **macOS** by default. SwiftData is unavailable on macOS without AppKit, causing compilation errors even though the package is correct for iOS.

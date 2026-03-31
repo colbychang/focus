@@ -1,0 +1,51 @@
+{
+  "featureId": "focus-mode-profile-crud",
+  "reviewedAt": "2026-03-31T05:45:00.000Z",
+  "commitId": "9e75acbdeec7c32b8b7ee4c875178770ccb20dfe",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation fully covers all required feature behaviors: FocusModeService with CRUD + validation in FocusCore, FocusModeListView with empty state and swipe-to-delete confirmation, FocusModeCreateView and FocusModeEditView with shared FocusModeFormContent, 23 unit tests and 7 UI tests — all passing. The code follows project conventions (Swift 6.2, @Observable ViewModels, @MainActor service, protocol-injected dependencies, in-memory SwiftData for tests). Four non-blocking observations are noted below.",
+    "issues": [
+      {
+        "file": "Focus/ViewModels/FocusModeFormViewModel.swift",
+        "line": 85,
+        "severity": "non_blocking",
+        "description": "isSaving is set to true and immediately false in the same synchronous function on the main actor. The Save button's .disabled(viewModel.isSaving) will never visually fire — the UI cannot repaint between the two assignments in a synchronous call. This is cosmetically incorrect but functionally harmless since SwiftData operations here are synchronous and fast."
+      },
+      {
+        "file": "Focus/ViewModels/FocusModeListViewModel.swift",
+        "line": 51,
+        "severity": "non_blocking",
+        "description": "loadProfiles() stores fetch errors in errorMessage, but FocusModeListView has no UI to display errorMessage (unlike FocusModeFormContent which shows the error section). Fetch errors from SwiftData are extremely rare in practice, but errors would be silently dropped from the user's perspective."
+      },
+      {
+        "file": "Focus/Views/FocusModes/FocusModeListView.swift",
+        "line": 162,
+        "severity": "non_blocking",
+        "description": "The Color(hex:) extension is defined in FocusModeListView.swift but is also used by FocusModeFormContent.swift. This works since both files are in the same target, but the extension would be better placed in a dedicated file (e.g., Color+Hex.swift) to avoid hidden coupling. Subsequent code has already consumed this extension from FocusModeFormContent, so it is effectively fine as-is."
+      },
+      {
+        "file": "FocusUITests/FocusModeUITests.swift",
+        "line": null,
+        "severity": "non_blocking",
+        "description": "No UI test covers the edit profile flow (tap a profile row → verify form is pre-populated → save changes → verify list updates). The feature description's explicit UI test list does not include an edit test, but the verificationSteps mention 'edit flows'. The edit form shares FocusModeFormContent with create and is covered in unit tests for FocusModeService; however, the E2E navigation → pre-population → save cycle is untested at the UI level."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "The worker discovered that Swift Testing @MainActor tests with SwiftData ModelContext crash when running tests in parallel, and fixed it using the .serialized suite trait (@Suite(\"...\", .serialized)). This is a non-obvious SwiftData + Swift Testing interaction that future workers writing SwiftData unit tests will hit. It is not currently documented in testing-patterns.md.",
+      "evidence": "FocusTests/FocusModeServiceTests.swift line 11: @Suite(\"FocusModeService Tests\", .serialized). Handoff discoveredIssues[1]: 'Swift Testing @MainActor tests with SwiftData crash when running in parallel. Fixed by using .serialized trait on the test suite. Suggested fix: Use @Suite(\"...\", .serialized) for any test suite that uses @MainActor with SwiftData ModelContext.'"
+    },
+    {
+      "area": "knowledge",
+      "observation": "The worker introduced the --use-in-memory-store launch argument pattern in FocusApp.swift to give UI tests a clean SwiftData state on each launch. This is a broadly applicable pattern for all future UI tests that need clean persistent state, but it is not currently documented in testing-patterns.md.",
+      "evidence": "Focus/FocusApp.swift: 'let useInMemory = ProcessInfo.processInfo.arguments.contains(\"--use-in-memory-store\")'. FocusUITests/FocusModeUITests.swift line 16: app.launchArguments = [\"--auth-status\", \"approved\", \"--use-in-memory-store\"]. Handoff discoveredIssues[0] and skillFeedback.suggestedChanges[1] both call this out."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The focus-mode-profile-crud feature passes review. FocusModeService is correctly implemented in FocusCore with all required CRUD operations, validation (empty name, whitespace trimming, case-insensitive duplicate prevention), and proper cascade cleanup (shield clear + monitoring stop) on deletion. The three UI views (List, Create, Edit) faithfully implement the spec: empty state with the exact required text and + button, profile rows with name/icon/color/active badge, swipe-to-delete with a confirmation alert, and a shared form with SF Symbol icon picker and color picker. All 23 unit tests and 7 UI tests pass. The four identified issues are all non-blocking: a cosmetically inert isSaving flag, a silently dropped loadProfiles error state, a Color extension placement smell, and a missing edit-flow UI test. Two shared-state gaps are noted for documentation: the .serialized SwiftData/Swift Testing pattern and the --use-in-memory-store UI test launch argument pattern should both be added to testing-patterns.md."
+}

@@ -1,0 +1,74 @@
+{
+  "featureId": "focus-mode-scheduling",
+  "reviewedAt": "2026-03-31T02:00:00.000Z",
+  "commitId": "d3488e820510abe633d3c2912bd3a26fbeba8752",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The implementation is thorough and covers most of the feature specification: Weekday enum, ScheduleConfig validation (including overnight), ScheduleOverlapDetector, ScheduleManager, FocusModeScheduleView UI, 59 unit tests, and persistence tests. All 219 tests pass. However, there is a blocking design inconsistency: FocusModeService.updateSchedule() uses profile.id.uuidString as the DeviceActivity activity name, while ScheduleManager.activityName(for:) uses the 'focus_' prefix ('focus_<uuid>'). These two code paths — used for initial schedule registration vs. re-registration on launch — will produce different activity names for the same profile, leading to orphaned DeviceActivityCenter registrations and incorrect cleanup in deleteProfile() when the real DeviceActivityCenter is integrated. The unit test (testSchedulePersistenceAcrossRestart) masks this by using separate mock instances, so the inconsistency goes undetected.",
+    "issues": [
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/FocusModeService.swift",
+        "line": 215,
+        "severity": "blocking",
+        "description": "FocusModeService.updateSchedule() uses 'profile.id.uuidString' as the DeviceActivity activity name (e.g., '550E8400-...'). ScheduleManager.activityName(for:) at ScheduleManager.swift:175 uses 'focus_<uuid>' (e.g., 'focus_550E8400-...'). These two paths are incompatible: the ViewModel calls service.updateSchedule() to register schedules, while ScheduleManager.reregisterActiveSchedules() (needed for 'active profiles re-register on launch') uses the prefixed name. This creates orphaned monitors on re-registration (both '<uuid>' and 'focus_<uuid>' would be registered in real DeviceActivityCenter, consuming 2 of 20 slots per profile) and prevents deleteProfile() from correctly stopping the 'focus_<uuid>' registration. The naming should be unified — either all paths use the prefix or none do."
+      },
+      {
+        "file": "Focus/ViewModels/FocusModeFormViewModel.swift",
+        "line": 244,
+        "severity": "non_blocking",
+        "description": "The catch clause 'catch let error as ScheduleManagerError' is dead code. FocusModeService.updateSchedule() never throws ScheduleManagerError — it throws FocusModeServiceError.profileNotFound or lets MonitoringError propagate. When the 20-schedule limit is reached, MonitoringError.scheduleLimitReached propagates and is caught by the generic catch, showing it in errorMessage (general section) instead of scheduleErrorMessage (schedule-specific section). The ScheduleManagerError catch would only be reachable if the ViewModel used ScheduleManager directly or if FocusModeService wrapped its monitoring errors as ScheduleManagerError."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/ScheduleManager.swift",
+        "line": 143,
+        "severity": "non_blocking",
+        "description": "The comment in shouldRemoveShieldsOnIntervalEnd says 'If the profile was manually activated, don't remove shields on intervalDidEnd / (manual activation takes precedence over scheduled activation)' but the code does not check isManuallyActivated — it checks 'profile.isActive && !profile.scheduleDays.isEmpty'. At the time of this commit, FocusMode did not have isManuallyActivated. The comment is inaccurate/forward-looking and is misleading about the actual guard logic."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/ScheduleManager.swift",
+        "line": 55,
+        "severity": "non_blocking",
+        "description": "ScheduleManager accepts shieldService: ShieldServiceProtocol and sharedStateService: SharedStateService in its initializer, but neither dependency is used anywhere in the current implementation. This is dead weight in the constructor — callers (including the persistence test) must provide these unused dependencies."
+      },
+      {
+        "file": "FocusTests/ScheduleTests.swift",
+        "line": 798,
+        "severity": "non_blocking",
+        "description": "testDeleteProfileStopsScheduleMonitoring uses '#expect(stopCallCount >= 1)' — a very loose assertion that doesn't verify which activity name was stopped. The assertion would pass even if the wrong activity name (or no meaningful activity) was stopped. A tighter check would confirm the specific activity name used in updateSchedule was the same one that deleteProfile stopped."
+      },
+      {
+        "file": "FocusTests/ScheduleTests.swift",
+        "line": 872,
+        "severity": "non_blocking",
+        "description": "testSchedulePersistenceAcrossRestart does not verify that the activity name used in the first session's service.updateSchedule() matches the name registered by the second session's ScheduleManager.reregisterActiveSchedules(). It uses separate MockMonitoringService instances, so the inconsistency is invisible to the test. Adding a check that monitoringService2.activeMonitors.first has the same name as what service1 registered would expose the blocking naming inconsistency."
+      },
+      {
+        "file": "Focus/ViewModels/FocusModeFormViewModel.swift",
+        "line": 173,
+        "severity": "non_blocking",
+        "description": "checkForOverlaps() constructs a ScheduleConfig and calls detectConflicts without first validating the schedule (e.g., startHour could be 25 if the user hasn't finished entering data). The overlap detector processes the invalid config and may produce spurious or confusing overlap warnings. Calling schedule.validate() and skipping overlap check on validation failure would be more correct."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "Two different activity naming conventions coexist for DeviceActivityCenter activity names: (1) FocusModeService.updateSchedule() and deleteProfile() use profile.id.uuidString bare UUID, (2) ScheduleManager.activityName(for:) uses 'focus_<uuid>'. This naming convention is not documented in AGENTS.md or architecture.md. A project-wide convention should be established and documented to prevent this from recurring in future features.",
+      "evidence": "FocusModeService.swift line 215: 'let activityName = profile.id.uuidString' vs ScheduleManager.swift line 175: 'return \"focus_\\(profile.id.uuidString)\"'. Compare also FocusModeService.deleteProfile() at line ~231 using storeName = profile.id.uuidString for both shieldService.clearShields and monitoringService.stopMonitoring."
+    },
+    {
+      "area": "conventions",
+      "observation": "The architecture.md documents the named-ManagedSettingsStore pattern (using profile UUID as store name), but doesn't document the corresponding DeviceActivityCenter activity naming convention. Future workers implementing monitoring features need to know: should activity names be bare UUIDs (matching the ManagedSettingsStore names for consistency) or use a prefix? This should be codified.",
+      "evidence": "architecture.md says 'Named ManagedSettingsStore per Profile... named by profile UUID'. But the store name is the bare UUID (used in FocusModeService.deleteProfile: storeName = profile.id.uuidString for clearShields) while ScheduleManager uses 'focus_' prefix for monitoring. Mixing conventions leads to the blocking bug in this feature."
+    },
+    {
+      "area": "knowledge",
+      "observation": "DeviceActivity schedules have a 20-registration limit enforced by DeviceActivityCenter. The project handles this in two ways: (1) ScheduleManager.registerSchedule() pre-checks and throws ScheduleManagerError before calling startMonitoring; (2) MockMonitoringService.startMonitoring() enforces it by throwing MonitoringError.scheduleLimitReached. These two error types are different and the ViewModel only catches ScheduleManagerError for the schedule-specific UI path, making the MockMonitoringService enforcement path display in the wrong UI location. This dual-enforcement pattern should be documented.",
+      "evidence": "ScheduleManager.swift line 87-91: pre-check throws ScheduleManagerError.scheduleLimitReached(currentCount:). MockMonitoringService.swift line 60-63: throws MonitoringError.scheduleLimitReached. FocusModeFormViewModel.swift line 244: catches ScheduleManagerError but FocusModeService.updateSchedule() propagates MonitoringError which hits the generic catch."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The focus-mode-scheduling feature delivers a comprehensive implementation with Weekday enum, ScheduleConfig validation (including overnight schedules), ScheduleOverlapDetector, ScheduleManager, FocusModeScheduleView UI, and 59 unit tests. Tests pass and the build is clean. However, there is one blocking issue: FocusModeService.updateSchedule() registers DeviceActivity monitors under the bare profile UUID ('profile.id.uuidString'), while ScheduleManager.activityName(for:) — used for re-registration on launch — uses the 'focus_' prefixed name ('focus_<uuid>'). When both paths are used (which is the intended design: save via ViewModel→Service, re-register on launch via ScheduleManager), the real DeviceActivityCenter would end up with duplicate registrations and deleteProfile() would only clean up one of them. The persistence test (testSchedulePersistenceAcrossRestart) masks this by using separate mock instances. The fix is to unify the naming convention — either adopt the 'focus_' prefix in FocusModeService or remove it from ScheduleManager."
+}

@@ -1,0 +1,62 @@
+{
+  "featureId": "focus-mode-cross-area",
+  "reviewedAt": "2026-03-31T02:10:00.000Z",
+  "commitId": "6851cf3e4149200b8de2b87720accb908283ccac",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The feature implements FocusSessionRecorder, FocusNotificationService, FocusNotificationBanner, and AuthorizationStateHandler as isolated, well-tested components. Unit tests (26) and UI tests (3) all pass. However, two critical integration gaps mean the stated requirements are not met: (1) reconcileSessions() is never called on app launch — the method exists and is tested but has no production call site; (2) there is no IPC mechanism for the DeviceActivityMonitorExtension to trigger the in-app notification banner while the app is in the foreground. A third issue causes recorded session names to be UUID strings instead of profile names. These gaps mean the end-to-end flows are broken in production, even though the individual components work correctly.",
+    "issues": [
+      {
+        "file": "Focus/FocusApp.swift",
+        "line": 68,
+        "severity": "blocking",
+        "description": "reconcileSessions(modelContext:) is never called on app launch. The feature requires 'On main app launch, reconcile UserDefaults timestamps into SwiftData ScreenTimeEntry records.' The sessionRecorder is created in FocusApp.init() and passed to ContentView, but neither FocusApp.body nor ContentView ever calls sessionRecorder.reconcileSessions(modelContext:). Pending session records from the DeviceActivityMonitorExtension will remain in UserDefaults indefinitely and never be written into SwiftData. The unit tests only test the reconciliation method in isolation — there is no wiring in the app lifecycle. Fix: add a .task { await sessionRecorder.reconcileSessions(modelContext: modelContainer.mainContext) } on the WindowGroup or equivalent app-launch hook."
+      },
+      {
+        "file": "Focus/ContentView.swift",
+        "line": 12,
+        "severity": "blocking",
+        "description": "sessionRecorder stored on ContentView is orphaned — it is received as a parameter but never used anywhere in ContentView's body or lifecycle. This is dead code that creates false confidence that reconciliation is wired up. The same dead code reinforces the missing reconciliation call-site issue above."
+      },
+      {
+        "file": "DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.swift",
+        "line": 18,
+        "severity": "blocking",
+        "description": "No IPC mechanism exists for the extension to trigger the in-app notification banner while the app is in the foreground. The extension calls recordSessionStart/recordSessionEnd (writing to UserDefaults), but the main app has no observer on those keys and no Darwin notification listener. The FocusNotificationService.showActivation/showDeactivation are only invoked via the '--show-focus-notification' launch argument (UI test path) and never from real DeviceActivity events. A proper implementation requires the extension to write a pending-notification entry to App Group UserDefaults, and the main app to observe that key (via KVO, polling in a .task loop, or a Darwin CFNotificationCenter post) and call the notification service. This gap means the in-app banner feature is test-only and broken in production."
+      },
+      {
+        "file": "DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.swift",
+        "line": 27,
+        "severity": "blocking",
+        "description": "Profile name recorded as UUID string instead of human-readable name. recordSessionStart(profileId:profileName:) is called with profileName set to profileIdString (the UUID string, e.g. 'E621E1F8-C36C-495A-93FC-0C247A3E6E5F'), not the profile's display name. The comment acknowledges this: 'The profile name is stored as the activity name prefix for simplicity.' But the activity name contains only the UUID — there is no profile name embedded in it. As a result, reconciled ScreenTimeEntry records get categoryName = 'Focus Session: E621E1F8-...' instead of 'Focus Session: Work'. This makes the analytics data unusable. The extension does not have access to SwiftData, so retrieving the profile name requires storing it in App Group UserDefaults at schedule-registration time and reading it back in the extension."
+      },
+      {
+        "file": "Focus/ContentView.swift",
+        "line": 11,
+        "severity": "non_blocking",
+        "description": "ContentView declares 'var notificationService: FocusNotificationService = FocusNotificationService()' with a default value that creates a new, detached service instance. The app always passes the shared service explicitly, so the default is not used in production. However, SwiftUI previews and any code that constructs ContentView without passing the service will silently get an isolated service that never receives events. Making it a required 'let' parameter (no default) would catch this at compile time."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "No documentation exists in architecture.md or AGENTS.md for the cross-process live event notification pattern (extension → foreground app). The feature requires the extension to notify the foreground app when a session starts/ends so the banner can be shown. The only IPC available is App Group UserDefaults plus Darwin CFNotificationCenter. This pattern is likely needed by future workers implementing real-time cross-process events (e.g., live widget updates, foreground-aware actions). Adding a section to architecture.md covering Darwin notifications or UserDefaults KVO for cross-process signaling would prevent future workers from implementing half-solutions like this one.",
+      "evidence": "DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.swift:27 — only writes to UserDefaults, no notification posted. FocusApp.swift:68 — no UserDefaults observer or Darwin notification listener. architecture.md describes UserDefaults as the IPC layer but does not document the notification/observation pattern needed for real-time signaling."
+    },
+    {
+      "area": "knowledge",
+      "observation": "The pattern for storing profile metadata (name, icon, color) in App Group UserDefaults at schedule-registration time — so that extensions can read it without SwiftData access — is not documented anywhere. The extension currently cannot look up profile names at all. Workers implementing extension-side features that need profile metadata will encounter this gap. AGENTS.md or architecture.md should note that profile display data must be mirrored into App Group UserDefaults when profiles are created/updated if extensions need to reference it.",
+      "evidence": "DeviceActivityMonitorExtension/DeviceActivityMonitorExtension.swift:27 — uses profileIdString as profileName because there is no way to look up the actual name from the extension. FocusSessionRecorder.swift:94 — profileName parameter used for ScreenTimeEntry.categoryName would produce UUID-based strings without the mirror pattern."
+    },
+    {
+      "area": "conventions",
+      "observation": "The sessionRecorder is passed into ContentView but never used there — all reconciliation-relevant lifecycle integration belongs at the FocusApp level (where modelContainer is owned), not propagated down to ContentView. Future workers should keep lifecycle/infrastructure concerns at the App level rather than passing them to views. AGENTS.md does not currently prescribe where app-launch lifecycle hooks should live.",
+      "evidence": "Focus/FocusApp.swift — owns modelContainer and notificationService. Focus/ContentView.swift:12-13 — receives sessionRecorder and notificationService but only uses notificationService; sessionRecorder sits unused. The reconciliation call logically belongs in FocusApp.body's .task or a dedicated onAppear, not in a view."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "FAIL. Three blocking issues prevent the feature from meeting its stated requirements. First, reconcileSessions(modelContext:) has no production call site — sessions recorded by the extension will never be written to SwiftData despite the method being implemented and tested in isolation. Second, the DeviceActivityMonitorExtension has no IPC path to trigger the foreground in-app notification banner; banners are only injectable via a UI-test launch argument. Third, profile names in extension-recorded sessions are UUID strings, not human-readable names, making reconciled analytics data unusable. All unit and UI tests pass because they test components in isolation or via launch-argument injection — neither the reconciliation wiring nor the real-time notification path is exercised. The underlying service implementations (FocusSessionRecorder, FocusNotificationService, AuthorizationStateHandler) are well-designed and the test coverage for those components is thorough; the gaps are all in the integration wiring."
+}
