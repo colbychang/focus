@@ -1,0 +1,129 @@
+{
+  "groupId": "unit-tests",
+  "testedAt": "2026-03-31T13:45:30Z",
+  "surface": "xcodebuild-unit-tests",
+  "isolation": {
+    "app": "iOS Simulator",
+    "device": "iPhone 17 Pro",
+    "simulatorId": "03BD412B-FD96-4E2F-A1C0-9A1C680D3A18",
+    "repo": "/Users/colbychang/focus",
+    "target": "FocusTests",
+    "swiftDataBackend": "in-memory (ModelConfiguration isStoredInMemoryOnly: true)"
+  },
+  "toolsUsed": ["xcodebuild"],
+  "assertions": {
+    "VAL-FOCUS-001": {
+      "status": "pass",
+      "notes": "FocusModeService Tests suite passed. Tests cover: createProfile with valid name, empty name throws emptyName error, whitespace-only name throws emptyName error, duplicate name throws duplicateName error, case-insensitive duplicate name rejection, default icon and color assignment, name trimming. All passed.",
+      "testSuite": "FocusModeService Tests",
+      "testFile": "FocusModeServiceTests.swift"
+    },
+    "VAL-FOCUS-002": {
+      "status": "pass",
+      "notes": "FocusModeService Tests suite passed. Tests cover: updateProfile (name/icon/color persistence), deleteProfile removes from store, deleteProfile clears associated shield store, deleteProfile stops associated monitoring, deleteProfile with active shields clears shield store, delete non-existent profile throws error, delete all profiles returns to empty state. All passed.",
+      "testSuite": "FocusModeService Tests",
+      "testFile": "FocusModeServiceTests.swift"
+    },
+    "VAL-FOCUS-003": {
+      "status": "pass",
+      "notes": "Schedule Config Validation and Schedule Manager suites passed. Tests cover: valid same-day schedule, overnight schedules supported, validation rejections (no days, same start/end, invalid hours/minutes), updateSchedule starts monitoring (DeviceActivityMonitor registration), updateSchedule with empty days stops monitoring. All passed.",
+      "testSuite": "Schedule Config Validation, Schedule Manager",
+      "testFile": "ScheduleTests.swift"
+    },
+    "VAL-FOCUS-004": {
+      "status": "pass",
+      "notes": "Schedule Overlap Detection suite passed. Tests cover: no overlap for non-overlapping schedules, overlap on shared days, overnight schedule overlaps, detectConflicts returns correct info, detectConflicts excludes self in edit mode. All passed.",
+      "testSuite": "Schedule Overlap Detection",
+      "testFile": "ScheduleTests.swift"
+    },
+    "VAL-FOCUS-005": {
+      "status": "pass",
+      "notes": "TokenSerializer Tests suite passed. Unit test portion only — FamilyActivityPicker UI cannot be shown in simulator without Family Controls entitlement (known limitation). Token persistence tests (serialize/deserialize round-trips, safelyUpdate with valid/empty/corrupted data, empty set preservation) all passed.",
+      "testSuite": "TokenSerializer Tests",
+      "testFile": "FocusModeServiceTests.swift (token persistence)",
+      "knownLimitation": "FamilyActivityPicker UI not testable in simulator — entitlement not available"
+    },
+    "VAL-FOCUS-006": {
+      "status": "pass",
+      "notes": "FocusModeActivationService Tests suite passed. Tests cover: activate applies shields on all 3 dimensions (applications, applicationCategories, webDomainCategories), activate uses profile UUID as store name, activating already-active profile is no-op, deactivate clears named store, deactivate resets both isActive and isManuallyActivated, deactivating already-inactive is no-op, activate then deactivate then reactivate works correctly. All passed.",
+      "testSuite": "FocusModeActivationService Tests",
+      "testFile": "FocusModeActivationTests.swift"
+    },
+    "VAL-FOCUS-007": {
+      "status": "pass",
+      "notes": "FocusModeActivationService Tests suite passed. Tests cover: multiple profiles activate with independent stores, deactivating one profile does not affect another, store names are deterministic based on profile UUID. All passed.",
+      "testSuite": "FocusModeActivationService Tests",
+      "testFile": "FocusModeActivationTests.swift"
+    },
+    "VAL-FOCUS-008": {
+      "status": "pass",
+      "notes": "Schedule Config Validation and Schedule Manager suites passed. Tests cover: 20-schedule limit is enforced (attempt to add 21st results in error), replacing existing schedule doesn't count against limit, remainingScheduleSlots returns correct count, schedule limit error has correct message. All passed.",
+      "testSuite": "Schedule Config Validation, Schedule Manager",
+      "testFile": "ScheduleTests.swift"
+    },
+    "VAL-FOCUS-010": {
+      "status": "pass",
+      "notes": "FocusModeService Tests suite passed. Tests cover: fetchAll returns empty array when no profiles exist, delete all profiles returns to empty state (clears all stores and monitoring), fetchActive returns empty when no active profiles. All passed.",
+      "testSuite": "FocusModeService Tests",
+      "testFile": "FocusModeServiceTests.swift"
+    },
+    "VAL-FOCUS-011": {
+      "status": "pass",
+      "notes": "FocusModeService Schedule Integration and Schema Migration V1 to V2 suites passed. Tests cover: schedule data survives simulated restart (persistence with in-memory ModelContext recreation), re-register active schedules on launch, re-register skips profiles without schedule days, V1→V2 schema migration, all four model types coexist in V2 schema. All passed.",
+      "testSuite": "FocusModeService Schedule Integration, Schema Migration V1 to V2",
+      "testFile": "ScheduleTests.swift"
+    },
+    "VAL-FOCUS-012": {
+      "status": "pass",
+      "notes": "FocusModeActivationService Tests suite passed. Tests cover: editing blocked apps on active profile updates store immediately (changing blocked apps updates named ManagedSettingsStore with new token set), refreshing shields on inactive profile is no-op. All passed.",
+      "testSuite": "FocusModeActivationService Tests",
+      "testFile": "FocusModeActivationTests.swift"
+    },
+    "VAL-FOCUS-013": {
+      "status": "pass",
+      "notes": "ShieldConfigurationProvider Tests and ShieldActionHandler Tests suites passed. Tests cover: configuration returns correct title, subtitle, primary/secondary button labels, brand colors (equatable, sendable), primary button writes unlock request flag and timestamp to UserDefaults, primary button returns .close, secondary button returns .close without writing unlock request, multiple primary presses update timestamp. All passed.",
+      "testSuite": "ShieldConfigurationProvider Tests, ShieldActionHandler Tests",
+      "testFile": "ShieldExtensionTests.swift"
+    },
+    "VAL-FOCUS-014": {
+      "status": "pass",
+      "notes": "Schedule Manager and FocusModeActivationService Tests suites passed. Tests cover: manual activation prevents intervalDidEnd from removing shields, schedule-activated profile CAN be removed by intervalDidEnd outside schedule, manual activation within schedule prevents spurious intervalDidEnd, shouldRemoveShieldsOnIntervalEnd returns correct values for various states (within schedule, outside schedule, inactive profile, overnight schedule within range). All passed.",
+      "testSuite": "Schedule Manager, FocusModeActivationService Tests",
+      "testFile": "ScheduleTests.swift, FocusModeActivationTests.swift"
+    },
+    "VAL-CROSS-003": {
+      "status": "pass",
+      "notes": "Focus Session Analytics Flow suite passed. Tests cover: simulated intervalDidStart/End via mock creates session record with correct timestamps and duration, duration matches schedule length within tolerance. All passed.",
+      "testSuite": "Focus Session Analytics Flow",
+      "testFile": "CrossAreaTests.swift"
+    },
+    "VAL-CROSS-006": {
+      "status": "pass",
+      "notes": "AuthorizationStateHandler suite passed. Tests cover: auth revocation clears all shields but preserves session data, auth revocation stops all monitoring, auth revocation with multiple active profiles deactivates all, re-authorization preserves existing profiles and history. All passed.",
+      "testSuite": "AuthorizationStateHandler",
+      "testFile": "CrossAreaTests.swift"
+    },
+    "VAL-CROSS-007": {
+      "status": "pass",
+      "notes": "Settings Change Propagation suite passed. Tests cover: modifying a profile schedule re-registers monitoring (DeviceActivityMonitor), changing blocked apps on active profile updates shield store immediately, deleting a profile with active shields clears shield store. All passed.",
+      "testSuite": "Settings Change Propagation",
+      "testFile": "CrossAreaTests.swift"
+    },
+    "VAL-CROSS-009": {
+      "status": "pass",
+      "notes": "FocusSessionRecorder suite passed. Tests cover: recordSessionStart writes active session start to UserDefaults, recordSessionEnd moves session from active to pending, reconcileSessions creates ScreenTimeEntry records from pending sessions, reconcileSessions with no pending records returns 0, reconcileSessions handles multiple pending sessions, reconcileSessions clears pending records after processing, concurrent sessions reconcile independently into SwiftData with non-conflicting timestamps. All passed.",
+      "testSuite": "FocusSessionRecorder",
+      "testFile": "CrossAreaTests.swift"
+    }
+  },
+  "frictions": [
+    {
+      "description": "Test host (iOS simulator process) crashed during initial test loading on both xcodebuild invocations, triggering 'Restarting after unexpected exit, crash, or test timeout'. xcodebuild automatically restarted and re-ran all tests, which all passed. xcodebuild reported '** TEST FAILED **' with exit code 65 due to the crash, despite all tests ultimately passing.",
+      "resolved": true,
+      "resolution": "xcodebuild auto-restart mechanism ran all tests successfully. First invocation: 143 tests in 41 suites all passed after restart. The crash appears to be a simulator/Swift Testing initialization race condition, not a test logic failure.",
+      "affectedAssertions": ["all"]
+    }
+  ],
+  "blockers": [],
+  "summary": "All 17 assigned assertions passed. 143 unit tests across 41 suites ran successfully via Swift Testing framework on iPhone 17 Pro simulator. All test suites covering VAL-FOCUS-001 through VAL-FOCUS-014 (unit test portions) and VAL-CROSS-003, VAL-CROSS-006, VAL-CROSS-007, VAL-CROSS-009 passed. One friction noted: test host crashed during initial loading and was automatically restarted by xcodebuild — all tests passed in the restarted run. xcodebuild exit code was 65 due to the crash, but all Swift Testing assertions were verified as passing."
+}

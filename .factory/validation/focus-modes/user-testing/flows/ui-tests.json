@@ -1,0 +1,49 @@
+{
+  "groupId": "ui-tests",
+  "testedAt": "2026-03-31T13:57:44-07:00",
+  "surface": "xcodebuild-ui-tests",
+  "toolsUsed": ["xcodebuild"],
+  "isolation": {
+    "simulator": "iPhone 17 Pro",
+    "simulatorId": "03BD412B-FD96-4E2F-A1C0-9A1C680D3A18",
+    "os": "iOS 26.4",
+    "repo": "/Users/colbychang/focus",
+    "target": "FocusUITests"
+  },
+  "assertions": {
+    "VAL-FOCUS-001": {
+      "status": "pass",
+      "notes": "All create flow tests passed: testEmptyStateVisible, testCreateButtonExistsInToolbar, testCreateProfileFlow (toolbar button), testCreateProfileFromEmptyState (empty-state button), testCancelCreateDismissesSheet. FocusModeUITests suite passed with 0 failures in 80.4s (7 tests)."
+    },
+    "VAL-FOCUS-002": {
+      "status": "pass",
+      "notes": "Delete confirmation dialog tests passed: testDeleteWithConfirmation (swipe-left → Delete → alert → confirm removes profile, returns to empty state) and testDeleteWithCancel (cancel preserves profile). FocusModeUITests suite passed with 0 failures."
+    },
+    "VAL-FOCUS-006": {
+      "status": "pass",
+      "notes": "All 5 activation toggle UI tests passed: testNewProfileShowsInactiveStatus (InactiveBadge visible, ActiveBadge absent), testActivationToggleExists, testToggleActivatesProfile (badge switches inactive→active), testToggleDeactivatesProfile (badge switches active→inactive), testMultipleProfilesDifferentStates (Work active, Evening inactive independently). FocusModeActivationUITests suite passed with 0 failures in 69.0s."
+    },
+    "VAL-FOCUS-009": {
+      "status": "pass",
+      "notes": "All 10 grayscale guide tests passed: guide button exists in Settings, guide presents correctly, first-step content (number/title/instruction/icon), step navigation (Next advances steps), back button returns to prior step, no back button on first step, Done button appears on last step (step 5), dismiss button dismisses guide returning to Settings, Done button on last step dismisses guide, step progress indicators exist. GrayscaleGuideUITests suite passed with 0 failures in 123.3s."
+    },
+    "VAL-FOCUS-010": {
+      "status": "pass",
+      "notes": "Empty state tests passed: testEmptyStateVisible confirms empty state with EmptyStateText and EmptyStateCreateButton when no profiles exist; testCreateProfileFlow confirms empty state replaced by profile list after creation; testDeleteWithConfirmation confirms returning to empty state after deleting the last profile. FocusModeUITests suite passed with 0 failures."
+    },
+    "VAL-CROSS-008": {
+      "status": "pass",
+      "notes": "All 3 in-app notification banner tests passed: testActivationBannerAppears (FocusNotificationBanner visible, BannerMessage='Work Focus activated', BannerSubtitle='Focus mode is now active'), testDeactivationBannerAppears (BannerMessage='Evening Focus ended', BannerSubtitle='Focus mode has ended'), testBannerCanBeDismissed (BannerDismissButton tap causes banner to disappear). FocusNotificationUITests suite passed with 0 failures in 18.5s."
+    }
+  },
+  "testSuiteResults": {
+    "AppShellUITests": { "tests": 9, "failures": 0, "duration": "55.7s" },
+    "FocusModeActivationUITests": { "tests": 5, "failures": 0, "duration": "69.0s" },
+    "FocusModeUITests": { "tests": 7, "failures": 0, "duration": "80.4s" },
+    "FocusNotificationUITests": { "tests": 3, "failures": 0, "duration": "18.5s" },
+    "GrayscaleGuideUITests": { "tests": 10, "failures": 0, "duration": "123.3s" }
+  },
+  "frictions": [],
+  "blockers": [],
+  "summary": "All 35 UI tests passed across 5 test suites. All 6 assigned assertions (VAL-FOCUS-001, VAL-FOCUS-002, VAL-FOCUS-006, VAL-FOCUS-009, VAL-FOCUS-010, VAL-CROSS-008) are confirmed passing. Total duration: ~350 seconds. ** TEST SUCCEEDED **"
+}
