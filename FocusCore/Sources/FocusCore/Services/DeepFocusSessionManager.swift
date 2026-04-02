@@ -244,6 +244,34 @@ public final class DeepFocusSessionManager {
         startTimer()
     }
 
+    /// Starts a test session with an exact duration in seconds, bypassing validation.
+    /// Used only for UI testing via `--deep-focus-test-seconds` launch argument.
+    ///
+    /// - Parameter durationSeconds: The session duration in seconds.
+    public func startTestSession(durationSeconds: Int) {
+        guard !isSessionRunning else { return }
+
+        let sessionID = UUID()
+        let startTime = dateProvider()
+
+        currentSessionID = sessionID
+        sessionStartTime = startTime
+        configuredDurationSeconds = durationSeconds
+        remainingSeconds = durationSeconds
+        sessionStatus = .active
+        bypassCount = 0
+        breakCount = 0
+        totalBreakDuration = 0
+        completionTriggered = false
+        backgroundEntryTimestamp = nil
+
+        sharedStateService.setSessionActive(true)
+        sharedStateService.setString(sessionID.uuidString, forKey: .activeSessionID)
+
+        persistState()
+        startTimer()
+    }
+
     /// Abandons the current session.
     public func abandonSession() {
         guard isSessionRunning else { return }

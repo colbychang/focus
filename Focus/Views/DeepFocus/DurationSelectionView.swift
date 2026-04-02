@@ -29,6 +29,20 @@ struct DurationSelectionView: View {
     var blockingService: DeepFocusBlockingService?
     var onSessionStarted: ((AllowedAppsConfig) -> Void)?
 
+    // MARK: - Test Support
+
+    /// Test-only duration override in seconds (from `--deep-focus-test-seconds` launch argument).
+    /// When set, the Start button uses this value directly as seconds instead of minutes.
+    private var testDurationSeconds: Int? {
+        let args = ProcessInfo.processInfo.arguments
+        guard let idx = args.firstIndex(of: "--deep-focus-test-seconds"),
+              idx + 1 < args.count,
+              let seconds = Int(args[idx + 1]) else {
+            return nil
+        }
+        return seconds
+    }
+
     // MARK: - Computed Properties
 
     /// The resolved duration in minutes from either preset or custom input.
@@ -44,7 +58,7 @@ struct DurationSelectionView: View {
 
     /// Whether the Start button should be enabled.
     private var isStartEnabled: Bool {
-        resolvedDurationMinutes != nil
+        testDurationSeconds != nil || resolvedDurationMinutes != nil
     }
 
     // MARK: - Body
@@ -184,6 +198,15 @@ struct DurationSelectionView: View {
     }
 
     private func startSession() {
+        // Test mode: start with exact seconds, bypassing duration validation
+        if let testSeconds = testDurationSeconds {
+            sessionManager.startTestSession(durationSeconds: testSeconds)
+            let config = AllowedAppsConfig()
+            blockingService?.applyBlocking(allowedTokens: config.allTokenData.isEmpty ? nil : config.allTokenData)
+            onSessionStarted?(config)
+            return
+        }
+
         guard let minutes = resolvedDurationMinutes else { return }
 
         do {
