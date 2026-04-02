@@ -56,6 +56,7 @@
 		A1000104 /* DeepFocusLauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000104 /* DeepFocusLauncherView.swift */; };
 		A1000105 /* DeepFocusLauncherBlockingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000105 /* DeepFocusLauncherBlockingTests.swift */; };
 		A1000106 /* DeepFocusLauncherUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000106 /* DeepFocusLauncherUITests.swift */; };
+		A1000107 /* BypassFlowManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000107 /* BypassFlowManagerTests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
 		A1000082 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000003 /* FocusCore */; };
@@ -201,6 +202,7 @@
 		A2000104 /* DeepFocusLauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusLauncherView.swift; sourceTree = "<group>"; };
 		A2000105 /* DeepFocusLauncherBlockingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusLauncherBlockingTests.swift; sourceTree = "<group>"; };
 		A2000106 /* DeepFocusLauncherUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusLauncherUITests.swift; sourceTree = "<group>"; };
+		A2000107 /* BypassFlowManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BypassFlowManagerTests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4000010 /* DeviceActivityMonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -432,6 +434,7 @@
 				A20000F6 /* ScrutinyFixTests.swift */,
 				A2000102 /* DeepFocusSessionManagerTests.swift */,
 				A2000105 /* DeepFocusLauncherBlockingTests.swift */,
+				A2000107 /* BypassFlowManagerTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -848,6 +851,7 @@
 				A10000F6 /* ScrutinyFixTests.swift in Sources */,
 				A1000102 /* DeepFocusSessionManagerTests.swift in Sources */,
 				A1000105 /* DeepFocusLauncherBlockingTests.swift in Sources */,
+				A1000107 /* BypassFlowManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

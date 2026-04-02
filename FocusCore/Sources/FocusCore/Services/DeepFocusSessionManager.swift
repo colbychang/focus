@@ -142,7 +142,7 @@ public final class DeepFocusSessionManager {
     public private(set) var sessionStartTime: Date?
 
     /// Number of bypasses in the current session.
-    public private(set) var bypassCount: Int = 0
+    public var bypassCount: Int = 0
 
     /// Number of breaks in the current session.
     public private(set) var breakCount: Int = 0
@@ -277,8 +277,9 @@ public final class DeepFocusSessionManager {
     }
 
     /// Called every second by the timer. Decrements remaining time and checks for completion.
+    /// Timer ticks during both `.active` and `.bypassing` states (bypass does NOT pause the main timer).
     internal func timerTick() {
-        guard sessionStatus == .active else { return }
+        guard sessionStatus == .active || sessionStatus == .bypassing else { return }
 
         remainingSeconds = max(remainingSeconds - 1, 0)
 
@@ -328,8 +329,9 @@ public final class DeepFocusSessionManager {
             let now = dateProvider()
             let elapsedWhileBackground = Int(now.timeIntervalSince(backgroundTime))
 
-            if sessionStatus == .active {
+            if sessionStatus == .active || sessionStatus == .bypassing {
                 // Subtract elapsed time from remaining, clamping at 0
+                // Bypass does NOT pause the main timer, so we reconcile for both states
                 remainingSeconds = max(remainingSeconds - elapsedWhileBackground, 0)
 
                 if remainingSeconds <= 0 {
@@ -337,14 +339,14 @@ public final class DeepFocusSessionManager {
                     return
                 }
             }
-            // For .onBreak and .bypassing states, the main timer doesn't tick
-            // (handled by their respective managers)
+            // For .onBreak state, the main timer doesn't tick
+            // (handled by the break flow manager)
         }
 
         backgroundEntryTimestamp = nil
 
-        // Restart timer if still in active state
-        if sessionStatus == .active {
+        // Restart timer if still in active or bypassing state
+        if sessionStatus == .active || sessionStatus == .bypassing {
             persistState()
             startTimer()
         }
@@ -375,11 +377,12 @@ public final class DeepFocusSessionManager {
         let elapsedSinceSave = Int(now.timeIntervalSince(persisted.savedAt))
         let adjustedRemaining: Int
 
-        if status == .active {
-            // If active, subtract elapsed time
+        if status == .active || status == .bypassing {
+            // If active or bypassing, subtract elapsed time
+            // (bypass does NOT pause the main timer)
             adjustedRemaining = max(persisted.remainingSeconds - elapsedSinceSave, 0)
         } else {
-            // If on break or bypassing, the main timer was paused
+            // If on break, the main timer was paused
             adjustedRemaining = persisted.remainingSeconds
         }
 
