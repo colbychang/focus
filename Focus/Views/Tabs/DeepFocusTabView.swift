@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import FocusCore
 
 // MARK: - DeepFocusTabView
@@ -6,10 +7,20 @@ import FocusCore
 /// View for the Deep Focus tab.
 /// Shows duration selection when idle, or the launcher view when a session is running.
 /// The launcher view displays only allowed apps grouped by category with the session timer.
+///
+/// Orchestrates session lifecycle events:
+/// - Session completion (timer reaches 0): records stats, clears blocking, ends Live Activity
+/// - Session exit (user confirms two-step dialog): records abandoned session, clears blocking
 struct DeepFocusTabView: View {
     let sessionManager: DeepFocusSessionManager
     let blockingService: DeepFocusBlockingService
     var breakFlowManager: BreakFlowManager?
+    var bypassFlowManager: BypassFlowManager?
+
+    /// The session recorder for persisting session stats to SwiftData.
+    private let sessionRecorder = DeepFocusSessionRecorder()
+
+    @Environment(\.modelContext) private var modelContext
 
     /// The allowed apps configuration for the current session.
     @State private var allowedAppsConfig: AllowedAppsConfig = AllowedAppsConfig()
@@ -21,7 +32,10 @@ struct DeepFocusTabView: View {
                     DeepFocusLauncherView(
                         sessionManager: sessionManager,
                         categoryGroups: AppCategoryGrouper.group(config: allowedAppsConfig),
-                        breakFlowManager: breakFlowManager
+                        breakFlowManager: breakFlowManager,
+                        onSessionExitConfirmed: {
+                            handleSessionExit()
+                        }
                     )
                 } else if sessionManager.sessionStatus == .completed {
                     // Show completion briefly, then reset
@@ -54,6 +68,42 @@ struct DeepFocusTabView: View {
                 allowedAppsConfig = AllowedAppsConfig()
             }
         }
+        .task {
+            // Wire up session completion callback for recording stats
+            sessionManager.onSessionCompleted = {
+                handleSessionCompletion()
+            }
+        }
+    }
+
+    // MARK: - Session Lifecycle Handlers
+
+    /// Handles session completion (timer reached 0).
+    /// Cleans up bypass/break flows, ends Live Activity, records stats.
+    private func handleSessionCompletion() {
+        // Clean up sub-flows
+        bypassFlowManager?.handleSessionCompleted()
+        breakFlowManager?.handleSessionCompleted()
+
+        // Record completed session stats to SwiftData
+        sessionRecorder.recordSession(from: sessionManager, modelContext: modelContext)
+    }
+
+    /// Handles user-confirmed session exit (two-step confirmation completed).
+    /// Abandons session, cleans up sub-flows, records abandoned stats.
+    private func handleSessionExit() {
+        // Clean up sub-flows first
+        bypassFlowManager?.handleSessionCompleted()
+        breakFlowManager?.handleSessionCompleted()
+
+        // Abandon the session (sets status to .abandoned, clears shared state)
+        sessionManager.abandonSession()
+
+        // Record abandoned session stats to SwiftData
+        sessionRecorder.recordSession(from: sessionManager, modelContext: modelContext)
+
+        // Reset to idle
+        sessionManager.resetToIdle()
     }
 }
 

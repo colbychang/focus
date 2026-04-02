@@ -15,9 +15,14 @@ struct DeepFocusLauncherView: View {
     let categoryGroups: [CategoryGroup]
     var breakFlowManager: BreakFlowManager?
 
+    /// Callback invoked when the user confirms session exit through the two-step dialog.
+    var onSessionExitConfirmed: (() -> Void)?
+
     // MARK: - State
 
     @State private var showingBreakSheet = false
+    @State private var showingFirstExitConfirmation = false
+    @State private var showingSecondExitConfirmation = false
 
     // MARK: - Body
 
@@ -206,8 +211,7 @@ struct DeepFocusLauncherView: View {
             }
 
             Button(role: .destructive) {
-                sessionManager.abandonSession()
-                sessionManager.resetToIdle()
+                showingFirstExitConfirmation = true
             } label: {
                 Text("End Session")
                     .font(.body)
@@ -218,12 +222,38 @@ struct DeepFocusLauncherView: View {
             .buttonStyle(.bordered)
             .tint(.red)
             .accessibilityIdentifier("LauncherEndSessionButton")
+            .alert("End Session?", isPresented: $showingFirstExitConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                    .accessibilityIdentifier("FirstExitCancelButton")
+                Button("End Session", role: .destructive) {
+                    showingSecondExitConfirmation = true
+                }
+                .accessibilityIdentifier("FirstExitConfirmButton")
+            } message: {
+                Text("Are you sure you want to end this session?")
+            }
+            .alert("Lose Focus Time?", isPresented: $showingSecondExitConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                    .accessibilityIdentifier("SecondExitCancelButton")
+                Button("End Session", role: .destructive) {
+                    onSessionExitConfirmed?()
+                }
+                .accessibilityIdentifier("SecondExitConfirmButton")
+            } message: {
+                Text("You will lose \(accumulatedMinutes) minutes of accumulated focus time. This cannot be undone.")
+            }
         }
         .padding(.horizontal)
         .padding(.bottom, 32)
     }
 
     // MARK: - Computed Properties
+
+    /// Computes the accumulated focus minutes for the warning dialog.
+    private var accumulatedMinutes: Int {
+        let elapsedSeconds = sessionManager.configuredDurationSeconds - sessionManager.remainingSeconds
+        return max(elapsedSeconds / 60, 0)
+    }
 
     private var timerColor: Color {
         if sessionManager.remainingSeconds <= 60 {

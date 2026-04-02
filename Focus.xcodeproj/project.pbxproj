@@ -60,6 +60,10 @@
 		A1000108 /* BreakDurationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000108 /* BreakDurationSelectionView.swift */; };
 		A1000109 /* BreakFlowManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000109 /* BreakFlowManagerTests.swift */; };
 		A1000110 /* BreakDurationSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000110 /* BreakDurationSelectionUITests.swift */; };
+		A2000111 /* DeepFocusSessionExitCompletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusSessionExitCompletionTests.swift; sourceTree = "<group>"; };
+		A2000112 /* DeepFocusSessionExitUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusSessionExitUITests.swift; sourceTree = "<group>"; };
+		A1000111 /* DeepFocusSessionExitCompletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000111 /* DeepFocusSessionExitCompletionTests.swift */; };
+		A1000112 /* DeepFocusSessionExitUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000112 /* DeepFocusSessionExitUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
 		A1000082 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000003 /* FocusCore */; };
@@ -443,6 +447,7 @@
 				A2000105 /* DeepFocusLauncherBlockingTests.swift */,
 				A2000107 /* BypassFlowManagerTests.swift */,
 				A2000109 /* BreakFlowManagerTests.swift */,
+				A2000111 /* DeepFocusSessionExitCompletionTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -459,6 +464,7 @@
 				A2000103 /* DeepFocusDurationSelectionUITests.swift */,
 				A2000106 /* DeepFocusLauncherUITests.swift */,
 				A2000110 /* BreakDurationSelectionUITests.swift */,
+				A2000112 /* DeepFocusSessionExitUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -863,6 +869,7 @@
 				A1000105 /* DeepFocusLauncherBlockingTests.swift in Sources */,
 				A1000107 /* BypassFlowManagerTests.swift in Sources */,
 				A1000109 /* BreakFlowManagerTests.swift in Sources */,
+				A1000111 /* DeepFocusSessionExitCompletionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -879,6 +886,7 @@
 				A1000103 /* DeepFocusDurationSelectionUITests.swift in Sources */,
 				A1000106 /* DeepFocusLauncherUITests.swift in Sources */,
 				A1000110 /* BreakDurationSelectionUITests.swift in Sources */,
+				A1000112 /* DeepFocusSessionExitUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

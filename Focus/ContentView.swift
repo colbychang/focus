@@ -38,6 +38,7 @@ struct MainTabView: View {
     @State private var sessionManager: DeepFocusSessionManager
     @State private var blockingService: DeepFocusBlockingService
     @State private var breakFlowManager: BreakFlowManager
+    @State private var bypassFlowManager: BypassFlowManager
 
     enum Tab: String, CaseIterable {
         case focus
@@ -63,6 +64,11 @@ struct MainTabView: View {
             liveActivityService: dependencies.liveActivityService,
             sharedStateService: dependencies.sharedStateService
         ))
+        self._bypassFlowManager = State(initialValue: BypassFlowManager(
+            blockingService: blockingSvc,
+            sessionManager: sessionMgr,
+            sharedStateService: dependencies.sharedStateService
+        ))
     }
 
     var body: some View {
@@ -79,7 +85,8 @@ struct MainTabView: View {
             DeepFocusTabView(
                 sessionManager: sessionManager,
                 blockingService: blockingService,
-                breakFlowManager: breakFlowManager
+                breakFlowManager: breakFlowManager,
+                bypassFlowManager: bypassFlowManager
             )
                 .tag(Tab.deepFocus)
                 .tabItem {

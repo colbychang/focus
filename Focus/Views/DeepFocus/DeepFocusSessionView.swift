@@ -11,6 +11,14 @@ struct DeepFocusSessionView: View {
 
     let sessionManager: DeepFocusSessionManager
 
+    /// Callback invoked when the user confirms session exit through the two-step dialog.
+    var onSessionExitConfirmed: (() -> Void)?
+
+    // MARK: - State
+
+    @State private var showingFirstExitConfirmation = false
+    @State private var showingSecondExitConfirmation = false
+
     // MARK: - Body
 
     var body: some View {
@@ -40,8 +48,7 @@ struct DeepFocusSessionView: View {
             VStack(spacing: 12) {
                 // End Session button
                 Button(role: .destructive) {
-                    sessionManager.abandonSession()
-                    sessionManager.resetToIdle()
+                    showingFirstExitConfirmation = true
                 } label: {
                     Text("End Session")
                         .font(.body)
@@ -52,6 +59,26 @@ struct DeepFocusSessionView: View {
                 .buttonStyle(.bordered)
                 .tint(.red)
                 .accessibilityIdentifier("EndSessionButton")
+                .alert("End Session?", isPresented: $showingFirstExitConfirmation) {
+                    Button("Cancel", role: .cancel) { }
+                        .accessibilityIdentifier("FirstExitCancelButton")
+                    Button("End Session", role: .destructive) {
+                        showingSecondExitConfirmation = true
+                    }
+                    .accessibilityIdentifier("FirstExitConfirmButton")
+                } message: {
+                    Text("Are you sure you want to end this session?")
+                }
+                .alert("Lose Focus Time?", isPresented: $showingSecondExitConfirmation) {
+                    Button("Cancel", role: .cancel) { }
+                        .accessibilityIdentifier("SecondExitCancelButton")
+                    Button("End Session", role: .destructive) {
+                        onSessionExitConfirmed?()
+                    }
+                    .accessibilityIdentifier("SecondExitConfirmButton")
+                } message: {
+                    Text("You will lose \(accumulatedMinutes) minutes of accumulated focus time. This cannot be undone.")
+                }
             }
             .padding(.horizontal)
             .padding(.bottom, 32)
@@ -110,6 +137,12 @@ struct DeepFocusSessionView: View {
         case .abandoned, .idle:
             return .gray
         }
+    }
+
+    /// Computes the accumulated focus minutes for the warning dialog.
+    private var accumulatedMinutes: Int {
+        let elapsedSeconds = sessionManager.configuredDurationSeconds - sessionManager.remainingSeconds
+        return max(elapsedSeconds / 60, 0)
     }
 
     private var timerColor: Color {
