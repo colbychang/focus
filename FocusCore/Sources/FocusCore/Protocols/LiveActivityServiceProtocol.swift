@@ -4,15 +4,27 @@ import Foundation
 
 /// Static attributes for a break timer Live Activity.
 /// Conforms to `Codable` and `Hashable` as required by ActivityKit.
+/// Total payload must be under 4KB.
 public struct BreakActivityAttributes: Codable, Hashable, Sendable {
     /// The total break duration in seconds.
     public let breakDuration: TimeInterval
     /// The name of the associated focus session, if any.
     public let sessionName: String?
+    /// The unique identifier of the deep focus session.
+    public let sessionID: UUID?
+    /// The time the deep focus session started.
+    public let sessionStartTime: Date?
 
-    public init(breakDuration: TimeInterval, sessionName: String? = nil) {
+    public init(
+        breakDuration: TimeInterval,
+        sessionName: String? = nil,
+        sessionID: UUID? = nil,
+        sessionStartTime: Date? = nil
+    ) {
         self.breakDuration = breakDuration
         self.sessionName = sessionName
+        self.sessionID = sessionID
+        self.sessionStartTime = sessionStartTime
     }
 }
 
@@ -21,7 +33,7 @@ public struct BreakActivityAttributes: Codable, Hashable, Sendable {
 /// Dynamic content state for a break timer Live Activity.
 /// Conforms to `Codable` and `Hashable` as required by ActivityKit.
 public struct BreakActivityState: Codable, Hashable, Sendable {
-    /// The date when the break ends.
+    /// The date when the break ends (primary field for timer display).
     public let endDate: Date
     /// Remaining seconds in the break.
     public let remainingSeconds: TimeInterval

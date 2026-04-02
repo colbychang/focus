@@ -37,6 +37,7 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .focus
     @State private var sessionManager: DeepFocusSessionManager
     @State private var blockingService: DeepFocusBlockingService
+    @State private var breakFlowManager: BreakFlowManager
 
     enum Tab: String, CaseIterable {
         case focus
@@ -48,11 +49,19 @@ struct MainTabView: View {
     init(dependencies: DependencyContainer, notificationService: FocusNotificationService) {
         self.dependencies = dependencies
         self.notificationService = notificationService
-        self._sessionManager = State(initialValue: DeepFocusSessionManager(
+        let sessionMgr = DeepFocusSessionManager(
             sharedStateService: dependencies.sharedStateService
-        ))
-        self._blockingService = State(initialValue: DeepFocusBlockingService(
+        )
+        let blockingSvc = DeepFocusBlockingService(
             shieldService: dependencies.shieldService
+        )
+        self._sessionManager = State(initialValue: sessionMgr)
+        self._blockingService = State(initialValue: blockingSvc)
+        self._breakFlowManager = State(initialValue: BreakFlowManager(
+            sessionManager: sessionMgr,
+            blockingService: blockingSvc,
+            liveActivityService: dependencies.liveActivityService,
+            sharedStateService: dependencies.sharedStateService
         ))
     }
 
@@ -69,7 +78,8 @@ struct MainTabView: View {
 
             DeepFocusTabView(
                 sessionManager: sessionManager,
-                blockingService: blockingService
+                blockingService: blockingService,
+                breakFlowManager: breakFlowManager
             )
                 .tag(Tab.deepFocus)
                 .tabItem {
@@ -91,6 +101,10 @@ struct MainTabView: View {
         .accessibilityIdentifier("MainTabView")
         .focusNotificationOverlay(service: notificationService)
         .task {
+            // Clean up orphaned Live Activities on launch
+            breakFlowManager.cleanupOrphanedActivities()
+            // Recover orphaned break state on launch
+            breakFlowManager.recoverBreakState()
             // Recover orphaned session on launch
             sessionManager.recoverOrphanedSession()
         }

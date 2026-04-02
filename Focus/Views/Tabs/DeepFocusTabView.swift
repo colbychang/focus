@@ -9,6 +9,7 @@ import FocusCore
 struct DeepFocusTabView: View {
     let sessionManager: DeepFocusSessionManager
     let blockingService: DeepFocusBlockingService
+    var breakFlowManager: BreakFlowManager?
 
     /// The allowed apps configuration for the current session.
     @State private var allowedAppsConfig: AllowedAppsConfig = AllowedAppsConfig()
@@ -19,7 +20,8 @@ struct DeepFocusTabView: View {
                 if sessionManager.isSessionRunning {
                     DeepFocusLauncherView(
                         sessionManager: sessionManager,
-                        categoryGroups: AppCategoryGrouper.group(config: allowedAppsConfig)
+                        categoryGroups: AppCategoryGrouper.group(config: allowedAppsConfig),
+                        breakFlowManager: breakFlowManager
                     )
                 } else if sessionManager.sessionStatus == .completed {
                     // Show completion briefly, then reset
@@ -39,8 +41,10 @@ struct DeepFocusTabView: View {
         .accessibilityIdentifier("DeepFocusTabContent")
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
             sessionManager.handleBackgroundEntry()
+            breakFlowManager?.handleBackgroundEntry()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            breakFlowManager?.handleForegroundEntry()
             sessionManager.handleForegroundEntry()
         }
         .onChange(of: sessionManager.sessionStatus) { _, newStatus in

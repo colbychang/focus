@@ -65,10 +65,19 @@ public final class DeepFocusBlockingService: @unchecked Sendable {
 
     /// Clears all blocking for the deep focus session.
     /// Called when the session ends (completed or abandoned).
+    /// This also clears the stored token config.
     public func clearBlocking() {
         shieldService.clearShields(storeName: Self.storeName)
         isBlocking = false
         currentAllowedTokens = nil
+    }
+
+    /// Temporarily removes blocking while preserving the token configuration.
+    /// Used during breaks so that re-apply can restore the same blocking config.
+    public func suspendBlocking() {
+        shieldService.clearShields(storeName: Self.storeName)
+        isBlocking = false
+        // Intentionally does NOT clear currentAllowedTokens
     }
 
     /// Re-applies blocking with the same configuration.

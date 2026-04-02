@@ -57,6 +57,9 @@
 		A1000105 /* DeepFocusLauncherBlockingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000105 /* DeepFocusLauncherBlockingTests.swift */; };
 		A1000106 /* DeepFocusLauncherUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000106 /* DeepFocusLauncherUITests.swift */; };
 		A1000107 /* BypassFlowManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000107 /* BypassFlowManagerTests.swift */; };
+		A1000108 /* BreakDurationSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000108 /* BreakDurationSelectionView.swift */; };
+		A1000109 /* BreakFlowManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000109 /* BreakFlowManagerTests.swift */; };
+		A1000110 /* BreakDurationSelectionUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000110 /* BreakDurationSelectionUITests.swift */; };
 		A1000080 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000001 /* FocusCore */; };
 		A1000081 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000002 /* FocusCore */; };
 		A1000082 /* FocusCore in Frameworks */ = {isa = PBXBuildFile; productRef = A5000003 /* FocusCore */; };
@@ -203,6 +206,9 @@
 		A2000105 /* DeepFocusLauncherBlockingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusLauncherBlockingTests.swift; sourceTree = "<group>"; };
 		A2000106 /* DeepFocusLauncherUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepFocusLauncherUITests.swift; sourceTree = "<group>"; };
 		A2000107 /* BypassFlowManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BypassFlowManagerTests.swift; sourceTree = "<group>"; };
+		A2000108 /* BreakDurationSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakDurationSelectionView.swift; sourceTree = "<group>"; };
+		A2000109 /* BreakFlowManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakFlowManagerTests.swift; sourceTree = "<group>"; };
+		A2000110 /* BreakDurationSelectionUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakDurationSelectionUITests.swift; sourceTree = "<group>"; };
 		A2000090 /* FocusCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FocusCore; path = FocusCore; sourceTree = "<group>"; };
 		A4000001 /* Focus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Focus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4000010 /* DeviceActivityMonitorExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DeviceActivityMonitorExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -340,6 +346,7 @@
 				A2000100 /* DurationSelectionView.swift */,
 				A2000101 /* DeepFocusSessionView.swift */,
 				A2000104 /* DeepFocusLauncherView.swift */,
+				A2000108 /* BreakDurationSelectionView.swift */,
 			);
 			path = DeepFocus;
 			sourceTree = "<group>";
@@ -435,6 +442,7 @@
 				A2000102 /* DeepFocusSessionManagerTests.swift */,
 				A2000105 /* DeepFocusLauncherBlockingTests.swift */,
 				A2000107 /* BypassFlowManagerTests.swift */,
+				A2000109 /* BreakFlowManagerTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -450,6 +458,7 @@
 				A20000F5 /* FocusNotificationUITests.swift */,
 				A2000103 /* DeepFocusDurationSelectionUITests.swift */,
 				A2000106 /* DeepFocusLauncherUITests.swift */,
+				A2000110 /* BreakDurationSelectionUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -791,6 +800,7 @@
 				A1000100 /* DurationSelectionView.swift in Sources */,
 				A1000101 /* DeepFocusSessionView.swift in Sources */,
 				A1000104 /* DeepFocusLauncherView.swift in Sources */,
+				A1000108 /* BreakDurationSelectionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -852,6 +862,7 @@
 				A1000102 /* DeepFocusSessionManagerTests.swift in Sources */,
 				A1000105 /* DeepFocusLauncherBlockingTests.swift in Sources */,
 				A1000107 /* BypassFlowManagerTests.swift in Sources */,
+				A1000109 /* BreakFlowManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -867,6 +878,7 @@
 				A10000F5 /* FocusNotificationUITests.swift in Sources */,
 				A1000103 /* DeepFocusDurationSelectionUITests.swift in Sources */,
 				A1000106 /* DeepFocusLauncherUITests.swift in Sources */,
+				A1000110 /* BreakDurationSelectionUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

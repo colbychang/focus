@@ -40,6 +40,11 @@ public enum SharedStateKey: String, CaseIterable, Sendable {
     // Deep focus session persistence (survives background/termination)
     case deepFocusSessionData = "deepFocusSessionData"
     case deepFocusBackgroundTimestamp = "deepFocusBackgroundTimestamp"
+
+    // Break state persistence (survives termination)
+    case breakEndTime = "breakEndTime"
+    case breakEndTimeTimestamp = "breakEndTimeTimestamp"
+    case breakSessionRemaining = "breakSessionRemaining"
 }
 
 // MARK: - SharedStateService

@@ -145,10 +145,10 @@ public final class DeepFocusSessionManager {
     public var bypassCount: Int = 0
 
     /// Number of breaks in the current session.
-    public private(set) var breakCount: Int = 0
+    public var breakCount: Int = 0
 
     /// Total break duration in seconds for the current session.
-    public private(set) var totalBreakDuration: TimeInterval = 0
+    public var totalBreakDuration: TimeInterval = 0
 
     /// Whether the session is in an active-like state (active, onBreak, or bypassing).
     public var isSessionRunning: Bool {

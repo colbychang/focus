@@ -13,6 +13,11 @@ struct DeepFocusLauncherView: View {
 
     let sessionManager: DeepFocusSessionManager
     let categoryGroups: [CategoryGroup]
+    var breakFlowManager: BreakFlowManager?
+
+    // MARK: - State
+
+    @State private var showingBreakSheet = false
 
     // MARK: - Body
 
@@ -20,6 +25,11 @@ struct DeepFocusLauncherView: View {
         VStack(spacing: 0) {
             // Timer header
             timerHeader
+
+            // Break indicator (shown when on break)
+            if sessionManager.sessionStatus == .onBreak, let breakManager = breakFlowManager {
+                breakIndicator(breakManager: breakManager)
+            }
 
             // Content area
             if categoryGroups.isEmpty {
@@ -33,6 +43,12 @@ struct DeepFocusLauncherView: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("DeepFocusLauncherView")
+        .sheet(isPresented: $showingBreakSheet) {
+            BreakDurationSelectionView { minutes in
+                try? breakFlowManager?.startBreak(minutes: minutes)
+            }
+            .presentationDetents([.medium])
+        }
     }
 
     // MARK: - Timer Header
@@ -143,10 +159,52 @@ struct DeepFocusLauncherView: View {
         }
     }
 
+    // MARK: - Break Indicator
+
+    private func breakIndicator(breakManager: BreakFlowManager) -> some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "cup.and.saucer.fill")
+                    .foregroundStyle(.orange)
+                Text("Break Time")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.orange)
+            }
+            if let endDate = breakManager.breakEndDate {
+                Text(timerInterval: Date.now...endDate, countsDown: true)
+                    .font(.title3)
+                    .monospacedDigit()
+                    .foregroundStyle(.orange)
+            }
+        }
+        .padding(.vertical, 8)
+        .accessibilityIdentifier("BreakIndicator")
+    }
+
     // MARK: - Session Controls
 
     private var sessionControls: some View {
         VStack(spacing: 12) {
+            // Take a Break button (only when session is active, not on break)
+            if sessionManager.sessionStatus == .active && breakFlowManager != nil {
+                Button {
+                    showingBreakSheet = true
+                } label: {
+                    HStack {
+                        Image(systemName: "cup.and.saucer.fill")
+                        Text("Take a Break")
+                    }
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
+                .buttonStyle(.bordered)
+                .tint(.orange)
+                .accessibilityIdentifier("TakeBreakButton")
+            }
+
             Button(role: .destructive) {
                 sessionManager.abandonSession()
                 sessionManager.resetToIdle()
