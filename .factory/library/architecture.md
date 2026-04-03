@@ -117,6 +117,32 @@ For **real-time foreground notifications** (e.g., "show a banner when a focus se
 
 **Last-event metadata pattern for Darwin notifications:** Darwin notifications carry no payload. When the main app receives a notification, it reads associated data from UserDefaults. However, if UserDefaults state associated with the event was updated *before* the notification was posted (e.g., a session record moved from `activeSessionStarts` to `pendingRecords` in `recordSessionEnd`), the receiving handler may not find it under the expected key. To avoid this, write a dedicated "last event metadata" entry to UserDefaults *immediately before* posting the Darwin notification, with both the profile UUID and event type. Example keys: `last_focus_event_profile_uuid`, `last_focus_event_type`. The main app then reads from these stable keys regardless of other state transitions.
 
+## Deep Focus State Machine Constraints
+
+### Break/Bypass Interaction Protocol
+`BreakFlowManager.startBreak()` guards `sessionStatus == .active` and throws `.invalidSessionState` if the session is in `.bypassing`. The correct cleanup sequence when starting a break during a bypass countdown is:
+1. `BypassFlowManager.handleBreakStarted()` must call `sessionManager.resumeFromBypassing()` to return the session to `.active` **before** `BreakFlowManager.startBreak()` is called.
+2. Only after `handleBreakStarted()` returns can `startBreak()` be safely invoked.
+
+### Recovery Call Sequence (App Launch)
+When recovering from app termination, these two methods must be called in order:
+1. `BreakFlowManager.recoverBreakState()` — sets up break state and starts break timer if on break
+2. `DeepFocusSessionManager.recoverOrphanedSession()` — recovers session state
+
+**Critical**: If a break was active at termination, `recoverBreakState()` starts the break timer and sets `breakState = .active`. Then `recoverOrphanedSession()` must NOT start the main session timer (it should check `sharedStateService.isOnBreak()` and skip `startTimer()` when on break). The current implementation has a bug: `recoverOrphanedSession()` calls `startTimer()` for `.onBreak` sessions, causing both timers to run simultaneously.
+
+### ShieldServiceProtocol.applyShields — Two Distinct Semantics
+The same `applyShields(storeName:applications:categories:webDomains:)` call carries different semantics depending on the caller:
+- **Focus mode** (`FocusModeActivationService`): passes the tokens **to block** (specific blocking). Real implementation uses `.specific(tokens)`.
+- **Deep focus** (`DeepFocusBlockingService`): passes **allowed** (exception) tokens. Real implementation uses `.all(except: tokens)`.
+
+When implementing the real `ShieldServiceProtocol`, each use site must be handled differently. The `MockShieldService` does not distinguish these semantics — it simply records what it received. A dedicated deep-focus shield service method (e.g., `applyBlockAllExcept`) would be cleaner.
+
+### suspendBlocking() vs clearBlocking() in DeepFocusBlockingService
+- `clearBlocking()`: Removes all shields AND clears `currentAllowedTokens`. Use when session ends.
+- `suspendBlocking()`: Removes shields but preserves `currentAllowedTokens` for re-application. Use during breaks (so `reapplyBlocking()` can restore the correct config after the break).
+Using `clearBlocking()` during a break would prevent correct re-application after break ends.
+
 ## Key Constraints
 
 1. **No Family Controls entitlement yet** — all Screen Time calls go through protocol mocks

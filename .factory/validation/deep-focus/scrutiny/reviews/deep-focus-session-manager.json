@@ -1,0 +1,44 @@
+{
+  "featureId": "deep-focus-session-manager",
+  "reviewedAt": "2026-04-02T00:00:00.000Z",
+  "commitId": "b25d782",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The implementation fully covers all requirements in the feature description and expected behavior. DeepFocusSessionManager is correctly implemented as @Observable/@MainActor with a 1-second timer, wall-clock background/foreground reconciliation, single-completion guard, state machine transitions, duration validation, timer formatting with clean boundary transitions, UserDefaults persistence, and orphaned session recovery. DurationSelectionView has all required preset buttons, custom input with mutual exclusion, and conditional Start button. 45 unit tests and 7 UI tests pass. Two non-blocking issues were found.",
+    "issues": [
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/DeepFocusSessionManager.swift",
+        "line": 254,
+        "severity": "non_blocking",
+        "description": "In handleBackgroundEntry(), the deepFocusBackgroundTimestamp is written to UserDefaults.standard instead of via SharedStateService (App Group UserDefaults). This violates the project's convention that all shared state must go through the App Group suite. The same raw access is used in clearPersistedState() (line 310). More importantly, this key is never read back from UserDefaults by any method — handleForegroundEntry() reads from the in-memory backgroundEntryTimestamp property, and recoverOrphanedSession() reads from persisted.savedAt. The UserDefaults.standard write is therefore dead code. It wastes writes and could confuse future developers who see SharedStateKey.deepFocusBackgroundTimestamp in the enum and expect it to be in App Group UserDefaults."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/DeepFocusSessionManager.swift",
+        "line": 352,
+        "severity": "non_blocking",
+        "description": "In recoverOrphanedSession(), sessions that were in .onBreak state at termination are recovered with sessionStatus = .active (line 352 — the resume block always sets .active). The code correctly handles the .onBreak case by NOT adjusting remaining time for elapsed, but it still transitions the session to .active rather than .onBreak. This is functionally acceptable because BreakFlowManager.recoverBreakState() is called separately on launch (ContentView.swift) and handles break UI recovery independently. However, if break recovery is not triggered (e.g., if break state had also expired), the user will find their previously-paused break resumed as an active session without the break UI. No unit test covers this specific orphaned-onBreak recovery path."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "The worker wrote deepFocusBackgroundTimestamp to UserDefaults.standard directly (bypassing SharedStateService) in both handleBackgroundEntry() and clearPersistedState(). AGENTS.md states all cross-extension state must use App Group UserDefaults, but this write goes to standard UserDefaults. The key also exists in the SharedStateKey enum (which is exclusively used with App Group UserDefaults elsewhere), making the pattern inconsistent. AGENTS.md could clarify that even main-app-only timer state should go through SharedStateService/App Group UserDefaults for consistency.",
+      "evidence": "DeepFocusSessionManager.swift line 254: `let defaults = UserDefaults.standard` and line 310: `UserDefaults.standard.removeObject(...)`. All other persistence in the same file uses `sharedStateService.setData(...)` which targets App Group UserDefaults."
+    },
+    {
+      "area": "skills",
+      "observation": "The worker noted in skillFeedback.suggestedChanges that the TDD step ('Write Tests BEFORE implementation') was not strictly followed because test structure depends on API design for larger features. The deviation was justified and the skill procedure note says TDD, but the worker found it more efficient to co-develop tests and implementation in parallel for a large feature. The skill could be updated to clarify that TDD is strongly preferred for small units but parallel development is acceptable for large features where the API shape drives test design.",
+      "evidence": "skillFeedback.followedProcedure is true, but suggestedChanges[0] explicitly calls out the TDD deviation. SKILL.md Step 3: 'Write Tests First (TDD)' — 'Write failing tests that cover the feature's expectedBehavior'. The worker wrote 45 tests but in parallel with implementation."
+    },
+    {
+      "area": "conventions",
+      "observation": "The worker introduced a new test-support pattern: a public startTestSession(durationSeconds:) method on DeepFocusSessionManager that bypasses duration validation, activated via a --deep-focus-test-seconds launch argument checked in DurationSelectionView. This exposes a validation bypass in production code for UI testing purposes. The project already uses launch arguments for test configuration (--use-in-memory-store, --auth-status) but those configure the container/service layer, not bypass business validation at the method level. This pattern is not documented in testing-patterns.md and could be a template for future features.",
+      "evidence": "DeepFocusSessionManager.swift: public func startTestSession(durationSeconds: Int) with comment 'Used only for UI testing via --deep-focus-test-seconds launch argument'. DurationSelectionView.swift: testDurationSeconds computed property reads ProcessInfo.processInfo.arguments. testing-patterns.md has no entry for this pattern."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The deep-focus-session-manager feature is fully implemented and passes all tests (45 unit, 7 UI). All required components are present: DeepFocusSessionManager with correct state machine, timer, background/foreground reconciliation, single completion trigger, persistence and relaunch recovery; DurationSelectionView with presets, custom input, mutual exclusion, and conditional Start; comprehensive test coverage of all specified scenarios. Two non-blocking issues were identified: (1) deepFocusBackgroundTimestamp is written to UserDefaults.standard instead of App Group UserDefaults via SharedStateService and is never read back (dead code); (2) orphaned onBreak sessions are recovered as .active rather than .onBreak, which is functionally acceptable given the separate BreakFlowManager.recoverBreakState() call on launch, but is untested. Neither issue affects correctness of the currently passing tests or the feature's specified behaviors."
+}

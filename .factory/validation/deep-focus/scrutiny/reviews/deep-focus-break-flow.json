@@ -1,0 +1,62 @@
+{
+  "featureId": "deep-focus-break-flow",
+  "reviewedAt": "2026-04-02T22:00:00.000Z",
+  "commitId": "4034aeb2d8bc54d41d1e3dbf5e173b4d71a13621",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "The break flow implementation is comprehensive and covers most requirements well — timer pause/resume, blocking suspend/reapply, Live Activity lifecycle, duration selection UI, and background/foreground reconciliation all look correct. However, two blocking bugs were identified: (1) active-break termination recovery causes both the break timer and main session timer to run simultaneously, violating the 'break time does not count against session' invariant; and (2) expired-break termination recovery re-applies blocking with nil allowed-tokens (blocking all apps) instead of restoring the original allowed-apps configuration. Additionally, the widget's ActivityAttributes type (`BreakAttributes`) does not match the protocol's `BreakActivityAttributes`, which is a design gap that will require significant bridging when a real `LiveActivityService` is implemented.",
+    "issues": [
+      {
+        "file": "Focus/ContentView.swift",
+        "line": 101,
+        "severity": "blocking",
+        "description": "Active-break termination recovery race condition: `recoverBreakState()` is called before `recoverOrphanedSession()` in `MainTabView.task`. When the app is terminated during an active break, `recoverBreakState()` sets `breakState = .active` and starts the break timer (correctly). Then `recoverOrphanedSession()` reads the persisted session status (`.onBreak`), but for `.onBreak` it still calls `sessionStatus = .active` and `startTimer()` (line ~245 of DeepFocusSessionManager.swift). After recovery, both the break timer AND the main session timer are running. `timerTick()` checks `guard sessionStatus == .active || sessionStatus == .bypassing else { return }` — since the session manager was set to `.active`, the timer WILL decrement `remainingSeconds` during the break period, violating requirement 'Break time does NOT count against session duration' and expected behavior item 'Break time does not count against session duration'. The fix requires either: (a) having `recoverBreakState()` call `sessionManager.transitionToBreak()` when resuming an active break, or (b) having `recoverOrphanedSession()` check `sharedStateService.isOnBreak()` and skip starting the main timer when on break."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/BreakFlowManager.swift",
+        "line": 278,
+        "severity": "blocking",
+        "description": "Expired-break termination recovery applies incorrect blocking configuration: in `recoverBreakState()`, when `now >= persisted.breakEndTime`, `blockingService.reapplyBlocking()` is called on a freshly constructed `DeepFocusBlockingService` instance where `currentAllowedTokens == nil`. `reapplyBlocking()` falls into its nil-guard path and calls `applyBlocking(allowedTokens: nil)`, which blocks ALL apps. The original allowed-apps configuration is lost because `PersistedBreakState` does not include `allowedTokens`. The fix requires adding `allowedTokens: Set<Data>?` to `PersistedBreakState` so the blocking service can be seeded with the correct config before calling `reapplyBlocking()`. This affects users who had allowed specific apps during their session — on relaunch after termination, those apps become inaccessible even though the session is resuming."
+      },
+      {
+        "file": "FocusWidgets/FocusWidgetsLiveActivity.swift",
+        "line": 1,
+        "severity": "non_blocking",
+        "description": "Widget uses a different ActivityAttributes type than the protocol layer. `FocusWidgetsLiveActivity` is configured with `ActivityConfiguration(for: BreakAttributes.self)` where `BreakAttributes` has: static fields `breakDurationMinutes: Int`, `sessionID: String?`, `sessionStartTime: Date?` and a `ContentState` with `breakEndDate: Date, sessionName: String`. The protocol layer uses `BreakActivityAttributes` with `breakDuration: TimeInterval`, `sessionName: String?`, `sessionID: UUID?`, `sessionStartTime: Date?` and a separate `BreakActivityState`. The two types are structurally incompatible (different field names, `Int` vs `TimeInterval`, `String` vs `UUID` for sessionID, `sessionName` in different levels). There is no real `LiveActivityService` implementation — the app always uses `MockLiveActivityService`. The protocol comment says 'Real implementation wraps `Activity<BreakActivityAttributes>`' but `BreakActivityAttributes` does not conform to `ActivityAttributes`. When a real implementation is written, significant bridging will be required. This is not a current runtime bug (mock is used throughout) but will be a significant pain point."
+      },
+      {
+        "file": "FocusTests/BreakFlowManagerTests.swift",
+        "line": 66,
+        "severity": "non_blocking",
+        "description": "Dead code in `startBreakValidDuration` test: the `for minutes in 1...5` loop creates `bm`, `sm`, `bs` variables that are immediately discarded — the loop body creates test setups but never uses `bm` to call `startBreak`. The actual assertion only tests one duration (3 minutes). The test is effectively a single-duration test with 5 wasted object allocations, but more importantly, it does not verify that all 5 durations (1-5 minutes) succeed as claimed in the test name."
+      },
+      {
+        "file": "FocusTests/BreakFlowManagerTests.swift",
+        "line": 359,
+        "severity": "non_blocking",
+        "description": "Termination recovery tests do not verify the critical coordination between `recoverBreakState()` and `recoverOrphanedSession()`. Both `terminationRecoveryExpiredBreak` and `terminationRecoveryActiveBreak` test `recoverBreakState()` in isolation. The active-break test does not call `sessionManager.recoverOrphanedSession()` after `recoverBreakState()`, so it misses the timer race condition that occurs in the real app flow."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "Recovery coordination between `BreakFlowManager.recoverBreakState()` and `DeepFocusSessionManager.recoverOrphanedSession()` is undocumented. These two methods must be called in a specific order with awareness of each other's side effects (which session state each reads/writes), but neither method documents this coupling. The active-break bug exists precisely because each method works correctly in isolation but fails together. architecture.md should document the expected recovery call sequence and the responsibility split between the two managers.",
+      "evidence": "Focus/ContentView.swift lines 101-106 show the call sequence; the bug is undetectable from either method's implementation in isolation."
+    },
+    {
+      "area": "knowledge",
+      "observation": "`PersistedBreakState` (FocusCore/Sources/FocusCore/Services/BreakFlowManager.swift) is missing `allowedTokens: Set<Data>?` field. Without this field, expired-break recovery cannot restore the original blocking configuration. The blocking service's `currentAllowedTokens` is instance state that is not persisted to UserDefaults separately. This gap should be documented or fixed.",
+      "evidence": "BreakFlowManager.swift `persistBreakState()` creates `PersistedBreakState` without allowed tokens; `recoverBreakState()` expired path calls `blockingService.reapplyBlocking()` which has no token config to restore."
+    },
+    {
+      "area": "conventions",
+      "observation": "The widget target defines its own `BreakAttributes: ActivityAttributes` type locally in FocusWidgetsLiveActivity.swift rather than reusing or extending `BreakActivityAttributes` from FocusCore. This creates an undocumented divergence between the type the protocol layer refers to and the type the widget actually uses. AGENTS.md should clarify the expected type mapping strategy between FocusCore protocol types and widget ActivityAttributes types.",
+      "evidence": "FocusWidgets/FocusWidgetsLiveActivity.swift defines `struct BreakAttributes: ActivityAttributes`; FocusCore/Sources/FocusCore/Protocols/LiveActivityServiceProtocol.swift defines `public struct BreakActivityAttributes: Codable, Hashable` — two different types that represent the same concept."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Fail. Two blocking bugs prevent the feature from meeting its stated requirements. (1) Active-break termination recovery incorrectly starts the main deep-focus session timer while the break is still active, causing session time to count down during the break — violating the core requirement 'Break time does NOT count against session duration'. (2) Expired-break termination recovery re-applies blocking with nil allowed-tokens (blocks all apps) instead of the original configuration, because `PersistedBreakState` omits the allowed-tokens field. These bugs are not caught by the existing tests because the termination recovery tests are isolated and do not test the interaction between `recoverBreakState()` and `recoverOrphanedSession()`. The Live Activity type mismatch (`BreakAttributes` vs `BreakActivityAttributes`) is a non-blocking design gap that will require bridging when a real implementation is written."
+}

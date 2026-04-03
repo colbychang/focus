@@ -130,6 +130,61 @@ If the line says `passed`, all tests passed regardless of the `** TEST FAILED **
 
 ---
 
+## Deep Focus UI Tests: --deep-focus-test-seconds Launch Argument
+
+For UI tests that need an active deep focus session without waiting for real time to pass, use the `--deep-focus-test-seconds` launch argument to start a session with a short custom duration.
+
+**Pattern (app side — DurationSelectionView.swift):**
+```swift
+// DurationSelectionView reads this to start a test-mode session
+private var testDurationSeconds: Int? {
+    let args = ProcessInfo.processInfo.arguments
+    if let idx = args.firstIndex(of: "--deep-focus-test-seconds") {
+        return Int(args[idx + 1])
+    }
+    return nil
+}
+```
+
+**Pattern (test side):**
+```swift
+app.launchArguments = ["--auth-status", "approved", "--use-in-memory-store", "--deep-focus-test-seconds", "3600"]
+app.launch()
+// Navigate to Deep Focus tab and tap Start to begin a 60-minute test session
+```
+
+Note: `DeepFocusSessionManager.startTestSession(durationSeconds:)` bypasses the 5-minute minimum validation. It is a `public` method in production FocusCore (no `#if DEBUG` guard); the safety net is the launch-argument check at the callsite in `DurationSelectionView`.
+
+**Discovered in:** `deep-focus-navigation-integration` worker.
+
+---
+
+## Swift Testing: Timer-Based Services Require deinit for Test Exit
+
+`@MainActor @Observable` services that use `Timer.scheduledTimer` must invalidate their timer in `deinit`. If the timer is not stopped, the run loop stays alive after the test completes and the test process never exits (xcodebuild eventually times out).
+
+**Fix:** Add `deinit` with `nonisolated(unsafe)` on the timer property:
+
+```swift
+@MainActor
+@Observable
+public final class SomeService {
+    nonisolated(unsafe) private var timer: Timer?
+
+    deinit {
+        timer?.invalidate()
+        timer = nil
+    }
+    // ...
+}
+```
+
+Note: `nonisolated(unsafe)` is required to access the property in a `nonisolated deinit` (even though the compiler warns it "has no effect" — it does suppress the actor isolation error). This applies to `DeepFocusSessionManager.timer` and `BreakFlowManager.breakTimer`.
+
+**Discovered in:** `scrutiny-validator-deep-focus` — tests using `DeepFocusSessionManager` and `BreakFlowManager` hung indefinitely without this fix.
+
+---
+
 ## Swift Package Build: Do NOT Use `swift build` Inside FocusCore
 
 Running `swift build` (or `swift test`) directly inside the `FocusCore/` directory targets **macOS** by default. SwiftData is unavailable on macOS without AppKit, causing compilation errors even though the package is correct for iOS.

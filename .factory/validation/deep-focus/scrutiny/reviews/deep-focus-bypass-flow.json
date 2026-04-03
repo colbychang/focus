@@ -1,0 +1,45 @@
+{
+  "featureId": "deep-focus-bypass-flow",
+  "reviewedAt": "2026-04-02T22:00:00.000Z",
+  "commitId": "9d27cf3",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "BypassFlowManager is well-structured, covers most requirements, and the 67 tests pass. However, a blocking bug exists in handleBreakStarted() for the countdown case: the session is left in .bypassing state (not returned to .active), which prevents BreakFlowManager.startBreak() from working since it guards for sessionStatus == .active. Two additional non-blocking issues were found.",
+    "issues": [
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/BypassFlowManager.swift",
+        "line": 258,
+        "severity": "blocking",
+        "description": "handleBreakStarted() for the .countdown case does NOT call sessionManager.resumeFromBypassing(). After this method returns, the session remains in .bypassing state. The existing BreakFlowManager.startBreak() explicitly guards 'guard sessionManager.sessionStatus == .active else { throw BreakFlowError.invalidSessionState(...) }', so calling startBreak() after bypass.handleBreakStarted() (countdown case) will throw, and the break will never start. Compare with cancelBypass() which correctly calls resumeFromBypassing() in the analogous countdown case (line 221). The test breakDuringCountdownCancelsIt does not assert session.sessionStatus == .active, so it does not catch this regression."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/BypassFlowManager.swift",
+        "line": 13,
+        "severity": "non_blocking",
+        "description": "BypassFlowError.countdownAlreadyActive is declared in the public enum but is never thrown anywhere in BypassFlowManager. requestBypass() silently replaces an active countdown rather than throwing this error. This dead case is misleading to API consumers who might try-catch for it or rely on the documented API contract. Either remove it or throw it from requestBypass (but then also add a test for it)."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/BypassFlowManager.swift",
+        "line": 343,
+        "severity": "non_blocking",
+        "description": "revokeBypass() and the countdown case of cancelBypass() do not clear previousBypassedAppTokenData. This can cause a spurious onBypassRevoked callback in the following edge case: (1) App A bypass is active, (2) App B countdown is started (previousBypassedAppTokenData = App A), (3) App B countdown is cancelled, (4) User manually revokes App A, (5) App C countdown is started — previousBypassedAppTokenData is still App A since step 4 was not an .active state request, (6) App C completes — App A is 'revoked' again, firing onBypassRevoked for an already-revoked app. The shield operation is harmless (removing a token not in set is a no-op), but the callback could confuse any UI showing revocation state."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "The handleBreakStarted() / cancelBypass() asymmetry suggests an unwritten convention: 'flow managers that call transitionTo*() must also call resumeFrom*() on cleanup'. The BreakFlowManager and BypassFlowManager each control their own session state transitions, but there is no documented rule about which manager is responsible for calling resumeFromBypassing() when a break interrupts a bypass. AGENTS.md does not document the expected cross-manager interaction pattern.",
+      "evidence": "BypassFlowManager.cancelBypass (line ~221) calls resumeFromBypassing(); BypassFlowManager.handleBreakStarted (line ~258) for countdown case does not. BreakFlowManager.startBreak guards sessionStatus == .active. This asymmetry caused the blocking bug."
+    },
+    {
+      "area": "knowledge",
+      "observation": "The BreakFlowManager.startBreak() guards 'guard sessionManager.sessionStatus == .active else { throw BreakFlowError.invalidSessionState(...) }', meaning startBreak() is incompatible with sessionStatus == .bypassing. Future features that coordinate bypass and break flows need to ensure the session is returned to .active before calling startBreak(). This guard is not documented in architecture.md.",
+      "evidence": "FocusCore/Sources/FocusCore/Services/BreakFlowManager.swift line ~192: guard sessionManager.sessionStatus == .active else { throw BreakFlowError.invalidSessionState(sessionManager.sessionStatus.rawValue) }"
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The BypassFlowManager implementation covers most feature requirements well: 60-second countdown, single-app unlock via shield exceptions, wall-clock reconciliation, countdown replacement, previous-bypass revocation, timer independence, and session completion cleanup are all correctly implemented with extensive tests. However, a blocking bug exists: handleBreakStarted() for the countdown case fails to call sessionManager.resumeFromBypassing(), leaving the session stuck in .bypassing. Since BreakFlowManager.startBreak() throws if sessionStatus != .active, a break cannot start after cancelling a bypass countdown via handleBreakStarted() — directly violating the feature requirement 'break during bypass countdown cancels bypass' (which implies the break should proceed). This bug is not caught by the existing tests because breakDuringCountdownCancelsIt does not assert session.sessionStatus == .active after handleBreakStarted(). Two non-blocking issues: BypassFlowError.countdownAlreadyActive is dead code, and previousBypassedAppTokenData is not cleared on revocation/cancel, enabling a spurious onBypassRevoked callback in an edge case."
+}
