@@ -117,8 +117,8 @@ public final class BreakFlowManager {
 
     // MARK: - Private State
 
-    /// Timer for 1-second break countdown ticks.
-    private var breakTimer: Timer?
+    /// Timer for 1-second break countdown ticks. Invalidated in deinit to allow run loop exit in tests.
+    nonisolated(unsafe) private var breakTimer: Timer?
 
     /// The break end date for wall-clock reconciliation.
     private var breakEndTime: Date?
@@ -149,6 +149,12 @@ public final class BreakFlowManager {
     private let dateProvider: () -> Date
 
     // MARK: - Initialization
+
+    deinit {
+        // Invalidate the timer to allow the run loop to exit cleanly (important in tests).
+        breakTimer?.invalidate()
+        breakTimer = nil
+    }
 
     /// Creates a BreakFlowManager with the given dependencies.
     ///

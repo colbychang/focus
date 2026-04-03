@@ -131,16 +131,23 @@ final class DeepFocusDurationSelectionUITests: XCTestCase {
         let timerDisplay = app.staticTexts["LauncherTimerDisplay"]
         XCTAssertTrue(timerDisplay.waitForExistence(timeout: 5))
 
-        // End the session
+        // End the session — tapping End Session shows a two-step confirmation dialog
         let endButton = app.buttons["LauncherEndSessionButton"]
         XCTAssertTrue(endButton.waitForExistence(timeout: 5))
         endButton.tap()
 
-        // Should return to selection (after reset)
-        // The abandoned state will show briefly, then we'd need to reset
-        // For now just verify the end button worked (session is no longer showing timer in active state)
-        // After abandon, tab shows the selection again (idle state)
+        // Handle first confirmation dialog "End Session?"
+        let firstAlert = app.alerts.firstMatch
+        XCTAssertTrue(firstAlert.waitForExistence(timeout: 5), "First confirmation dialog should appear")
+        firstAlert.buttons["End Session"].firstMatch.tap()
+
+        // Handle second confirmation dialog "Lose Focus Time?"
+        let secondAlert = app.alerts.firstMatch
+        XCTAssertTrue(secondAlert.waitForExistence(timeout: 5), "Second confirmation dialog should appear")
+        secondAlert.buttons["End Session"].firstMatch.tap()
+
+        // After abandoning, tab returns to duration selection (idle state)
         let presetAfter = app.buttons["PresetButton_30"]
-        XCTAssertTrue(presetAfter.waitForExistence(timeout: 5), "Duration selection should reappear after ending session")
+        XCTAssertTrue(presetAfter.waitForExistence(timeout: 10), "Duration selection should reappear after ending session")
     }
 }

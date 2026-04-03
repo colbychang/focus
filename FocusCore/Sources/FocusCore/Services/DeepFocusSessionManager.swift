@@ -162,8 +162,8 @@ public final class DeepFocusSessionManager {
 
     // MARK: - Private State
 
-    /// Timer for 1-second ticks.
-    private var timer: Timer?
+    /// Timer for 1-second ticks. Invalidated in deinit to allow run loop exit in tests.
+    nonisolated(unsafe) private var timer: Timer?
 
     /// Timestamp when the app entered the background (for wall-clock reconciliation).
     private var backgroundEntryTimestamp: Date?
@@ -183,6 +183,12 @@ public final class DeepFocusSessionManager {
     private let dateProvider: () -> Date
 
     // MARK: - Initialization
+
+    deinit {
+        // Invalidate the timer to allow the run loop to exit cleanly (important in tests).
+        timer?.invalidate()
+        timer = nil
+    }
 
     /// Creates a DeepFocusSessionManager with the given dependencies.
     ///

@@ -279,24 +279,14 @@ struct SessionCompletionCascadeTests {
         try env.breakFlowManager.startBreak(minutes: 1)
         #expect(env.liveActivityService.startCalls.count == 1)
 
-        // The break ends
-        for _ in 0..<60 {
-            env.breakFlowManager.breakTick()
-        }
-
-        // Start another session for completion testing
-        env.sessionManager.resetToIdle()
-        try env.sessionManager.startSession(durationMinutes: 5)
-
-        // Start another break
-        try env.breakFlowManager.startBreak(minutes: 1)
-        let activityStartCount = env.liveActivityService.startCalls.count
-
-        // Session completes while break is active
+        // Session completes while break is active — handleSessionCompleted should end the Live Activity
         env.breakFlowManager.handleSessionCompleted()
 
         // Live Activity should be ended
         #expect(env.liveActivityService.endCalls.count >= 1)
+
+        // Clean up session state
+        env.sessionManager.resetToIdle()
     }
 
     @Test("Session completion: stats are recorded to SwiftData")

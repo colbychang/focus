@@ -98,14 +98,24 @@ final class DeepFocusLauncherUITests: XCTestCase {
         let launcherView = app.otherElements["DeepFocusLauncherView"]
         XCTAssertTrue(launcherView.waitForExistence(timeout: 5))
 
-        // End the session
+        // End the session — tapping End Session shows a two-step confirmation dialog
         let endButton = app.buttons["LauncherEndSessionButton"]
         XCTAssertTrue(endButton.waitForExistence(timeout: 5))
         endButton.tap()
 
+        // Handle first confirmation dialog "End Session?"
+        let firstAlert = app.alerts.firstMatch
+        XCTAssertTrue(firstAlert.waitForExistence(timeout: 5), "First confirmation dialog should appear")
+        firstAlert.buttons["End Session"].firstMatch.tap()
+
+        // Handle second confirmation dialog "Lose Focus Time?"
+        let secondAlert = app.alerts.firstMatch
+        XCTAssertTrue(secondAlert.waitForExistence(timeout: 5), "Second confirmation dialog should appear")
+        secondAlert.buttons["End Session"].firstMatch.tap()
+
         // Should return to duration selection
         let presetButton = app.buttons["PresetButton_30"]
-        XCTAssertTrue(presetButton.waitForExistence(timeout: 5), "Duration selection should reappear after ending session from launcher")
+        XCTAssertTrue(presetButton.waitForExistence(timeout: 10), "Duration selection should reappear after ending session from launcher")
     }
 
     func testLauncherTimerUpdates() {
