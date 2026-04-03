@@ -242,6 +242,13 @@ public final class BypassFlowManager {
             bypassState = .idle
             countdownStartTimestamp = nil
             sharedStateService.setBypassActive(false)
+
+            // Resume session from bypassing to active state so break can start
+            // (BreakFlowManager.startBreak() guards sessionStatus == .active)
+            if sessionManager.sessionStatus == .bypassing {
+                sessionManager.resumeFromBypassing()
+            }
+
             onCountdownCancelled?()
 
         case .active(let appTokenData):

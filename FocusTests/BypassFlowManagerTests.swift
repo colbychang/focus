@@ -427,6 +427,8 @@ struct BypassFlowManagerTests {
         #expect(bypass.bypassState == .idle)
         #expect(bypass.isCountdownActive == false)
         #expect(countdownCancelled == true)
+        // Session must be back to .active so BreakFlowManager.startBreak() can proceed
+        #expect(session.sessionStatus == .active)
     }
 
     @Test("Break with active bypass revokes it")

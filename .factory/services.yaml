@@ -1,8 +1,8 @@
 commands:
   build: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet
-  test: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled YES -parallel-testing-worker-count 4 CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-  test-unit: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusTests CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
-  test-ui: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusUITests CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+  test: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+  test-unit: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusTests -parallel-testing-enabled NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+  test-ui: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusUITests -parallel-testing-enabled NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
   typecheck: DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet
 
 services: {}

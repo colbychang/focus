@@ -765,4 +765,186 @@ struct BreakFlowManagerTests {
 
         #expect(breakMgr.breakState == .idle)
     }
+
+    // MARK: - Recovery Race Condition Tests (Fix 2)
+
+    @Test("Active break recovery does not start main session timer")
+    func activeBreakRecoveryDoesNotStartMainTimer() throws {
+        var currentDate = Date()
+        let sharedState = makeSharedStateService()
+        let mockShield = MockShieldService()
+        let mockLiveActivity = MockLiveActivityService()
+        let blockingService = DeepFocusBlockingService(shieldService: mockShield)
+        let sessionManager = DeepFocusSessionManager(sharedStateService: sharedState, dateProvider: { currentDate })
+
+        try sessionManager.startSession(durationMinutes: 30)
+        let initialRemaining = sessionManager.remainingSeconds
+        blockingService.applyBlocking(allowedTokens: nil)
+
+        let breakMgr1 = BreakFlowManager(
+            sessionManager: sessionManager,
+            blockingService: blockingService,
+            liveActivityService: mockLiveActivity,
+            sharedStateService: sharedState,
+            dateProvider: { currentDate }
+        )
+        try breakMgr1.startBreak(minutes: 5)
+        #expect(sessionManager.sessionStatus == .onBreak)
+
+        // Simulate termination — 60 seconds pass (break still active, 240s remaining)
+        currentDate = currentDate.addingTimeInterval(60)
+
+        // Create new managers for recovery (simulates app relaunch)
+        let sessionManager2 = DeepFocusSessionManager(sharedStateService: sharedState, dateProvider: { currentDate })
+        let blockingService2 = DeepFocusBlockingService(shieldService: mockShield)
+        let breakMgr2 = BreakFlowManager(
+            sessionManager: sessionManager2,
+            blockingService: blockingService2,
+            liveActivityService: mockLiveActivity,
+            sharedStateService: sharedState,
+            dateProvider: { currentDate }
+        )
+
+        // Recovery sequence (same order as ContentView)
+        let breakRecovered = breakMgr2.recoverBreakState()
+        #expect(breakRecovered == true)
+        #expect(breakMgr2.isBreakActive == true)
+
+        let sessionRecovered = sessionManager2.recoverOrphanedSession()
+        #expect(sessionRecovered == true)
+
+        // CRITICAL: session must be onBreak, NOT active
+        #expect(sessionManager2.sessionStatus == .onBreak)
+        // Remaining seconds must not have been decremented
+        #expect(sessionManager2.remainingSeconds == initialRemaining)
+
+        // Simulate timer ticks — they should NOT decrement remaining time (since we're on break)
+        sessionManager2.timerTick()
+        sessionManager2.timerTick()
+        sessionManager2.timerTick()
+        #expect(sessionManager2.remainingSeconds == initialRemaining)
+    }
+
+    // MARK: - Persisted Break State Allowed Tokens Tests (Fix 3)
+
+    @Test("Expired break recovery restores allowed tokens")
+    func expiredBreakRecoveryRestoresAllowedTokens() throws {
+        var currentDate = Date()
+        let sharedState = makeSharedStateService()
+        let mockShield = MockShieldService()
+        let mockLiveActivity = MockLiveActivityService()
+        let blockingService = DeepFocusBlockingService(shieldService: mockShield)
+        let sessionManager = DeepFocusSessionManager(sharedStateService: sharedState, dateProvider: { currentDate })
+
+        try sessionManager.startSession(durationMinutes: 30)
+        let allowedTokens: Set<Data> = [Data([1, 2, 3]), Data([4, 5, 6])]
+        blockingService.applyBlocking(allowedTokens: allowedTokens)
+
+        let breakMgr1 = BreakFlowManager(
+            sessionManager: sessionManager,
+            blockingService: blockingService,
+            liveActivityService: mockLiveActivity,
+            sharedStateService: sharedState,
+            dateProvider: { currentDate }
+        )
+        try breakMgr1.startBreak(minutes: 2)
+
+        // Simulate termination — time passes beyond break end
+        currentDate = currentDate.addingTimeInterval(180) // 3 minutes > 2 min break
+
+        // New managers on relaunch
+        let blockingService2 = DeepFocusBlockingService(shieldService: mockShield)
+        let sessionManager2 = DeepFocusSessionManager(sharedStateService: sharedState, dateProvider: { currentDate })
+        let breakMgr2 = BreakFlowManager(
+            sessionManager: sessionManager2,
+            blockingService: blockingService2,
+            liveActivityService: mockLiveActivity,
+            sharedStateService: sharedState,
+            dateProvider: { currentDate }
+        )
+
+        let recovered = breakMgr2.recoverBreakState()
+
+        #expect(recovered == true)
+        #expect(blockingService2.isBlocking == true)
+        // CRITICAL: allowed tokens must be restored, not nil
+        #expect(blockingService2.currentAllowedTokens == allowedTokens)
+    }
+
+    @Test("Expired break recovery without allowed tokens blocks all apps")
+    func expiredBreakRecoveryWithoutTokensBlocksAll() throws {
+        var currentDate = Date()
+        let sharedState = makeSharedStateService()
+        let mockShield = MockShieldService()
+        let mockLiveActivity = MockLiveActivityService()
+        let blockingService = DeepFocusBlockingService(shieldService: mockShield)
+        let sessionManager = DeepFocusSessionManager(sharedStateService: sharedState, dateProvider: { currentDate })
+
+        try sessionManager.startSession(durationMinutes: 30)
+        blockingService.applyBlocking(allowedTokens: nil) // No allowed tokens
+
+        let breakMgr1 = BreakFlowManager(
+            sessionManager: sessionManager,
+            blockingService: blockingService,
+            liveActivityService: mockLiveActivity,
+            sharedStateService: sharedState,
+            dateProvider: { currentDate }
+        )
+        try breakMgr1.startBreak(minutes: 2)
+
+        currentDate = currentDate.addingTimeInterval(180)
+
+        let blockingService2 = DeepFocusBlockingService(shieldService: mockShield)
+        let sessionManager2 = DeepFocusSessionManager(sharedStateService: sharedState, dateProvider: { currentDate })
+        let breakMgr2 = BreakFlowManager(
+            sessionManager: sessionManager2,
+            blockingService: blockingService2,
+            liveActivityService: mockLiveActivity,
+            sharedStateService: sharedState,
+            dateProvider: { currentDate }
+        )
+
+        let recovered = breakMgr2.recoverBreakState()
+
+        #expect(recovered == true)
+        #expect(blockingService2.isBlocking == true)
+        // No allowed tokens — full blocking is correct
+        #expect(blockingService2.currentAllowedTokens == nil)
+    }
+
+    @Test("PersistedBreakState encodes and decodes with allowedTokens")
+    func persistedStateWithAllowedTokensCodable() throws {
+        let tokens: Set<Data> = [Data([1, 2, 3]), Data([4, 5, 6])]
+        let state = PersistedBreakState(
+            breakEndTime: Date(),
+            sessionRemainingSeconds: 1500,
+            breakDurationMinutes: 3,
+            sessionID: UUID(),
+            allowedTokens: tokens
+        )
+
+        let data = try JSONEncoder().encode(state)
+        let decoded = try JSONDecoder().decode(PersistedBreakState.self, from: data)
+
+        #expect(decoded.sessionRemainingSeconds == 1500)
+        #expect(decoded.breakDurationMinutes == 3)
+        #expect(decoded.sessionID == state.sessionID)
+        #expect(decoded.allowedTokens == tokens)
+    }
+
+    @Test("PersistedBreakState backward compatible without allowedTokens")
+    func persistedStateBackwardCompatible() throws {
+        // Simulate old persisted state without allowedTokens field
+        let state = PersistedBreakState(
+            breakEndTime: Date(),
+            sessionRemainingSeconds: 1500,
+            breakDurationMinutes: 3,
+            sessionID: UUID()
+        )
+
+        let data = try JSONEncoder().encode(state)
+        let decoded = try JSONDecoder().decode(PersistedBreakState.self, from: data)
+
+        #expect(decoded.allowedTokens == nil)
+    }
 }

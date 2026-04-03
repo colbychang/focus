@@ -47,17 +47,22 @@ public struct PersistedBreakState: Codable, Sendable {
     public let sessionRemainingSeconds: Int
     public let breakDurationMinutes: Int
     public let sessionID: UUID
+    /// The allowed app tokens at the time the break started.
+    /// Used to restore the correct blocking configuration on recovery after termination.
+    public let allowedTokens: Set<Data>?
 
     public init(
         breakEndTime: Date,
         sessionRemainingSeconds: Int,
         breakDurationMinutes: Int,
-        sessionID: UUID
+        sessionID: UUID,
+        allowedTokens: Set<Data>? = nil
     ) {
         self.breakEndTime = breakEndTime
         self.sessionRemainingSeconds = sessionRemainingSeconds
         self.breakDurationMinutes = breakDurationMinutes
         self.sessionID = sessionID
+        self.allowedTokens = allowedTokens
     }
 }
 
@@ -346,8 +351,14 @@ public final class BreakFlowManager {
         let now = dateProvider()
 
         if now >= persisted.breakEndTime {
-            // Break has expired — re-apply blocking and resume session
-            blockingService.reapplyBlocking()
+            // Break has expired — restore allowed tokens and re-apply blocking
+            // Must seed the blocking service with persisted tokens before reapplyBlocking(),
+            // otherwise it uses nil tokens (blocking ALL apps instead of the original config).
+            if let tokens = persisted.allowedTokens {
+                blockingService.applyBlocking(allowedTokens: tokens)
+            } else {
+                blockingService.reapplyBlocking()
+            }
 
             // Update shared state
             sharedStateService.setOnBreak(false)
@@ -427,7 +438,8 @@ public final class BreakFlowManager {
             breakEndTime: endTime,
             sessionRemainingSeconds: frozenSessionRemaining,
             breakDurationMinutes: currentBreakDurationMinutes,
-            sessionID: sessionID
+            sessionID: sessionID,
+            allowedTokens: blockingService.currentAllowedTokens
         )
 
         if let data = try? JSONEncoder().encode(state) {

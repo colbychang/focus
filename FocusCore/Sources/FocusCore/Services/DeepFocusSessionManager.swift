@@ -448,13 +448,23 @@ public final class DeepFocusSessionManager {
         bypassCount = persisted.bypassCount
         breakCount = persisted.breakCount
         totalBreakDuration = persisted.totalBreakDuration
-        sessionStatus = .active
         completionTriggered = false
         backgroundEntryTimestamp = nil
 
         sharedStateService.setSessionActive(true)
-        persistState()
-        startTimer()
+
+        // If the session was on break at termination and break recovery has already
+        // set isOnBreak, transition to .onBreak and do NOT start the main timer.
+        // This prevents both break timer and main session timer running simultaneously
+        // (break time must not count against session duration).
+        if status == .onBreak || sharedStateService.isOnBreak() {
+            sessionStatus = .onBreak
+            persistState()
+        } else {
+            sessionStatus = .active
+            persistState()
+            startTimer()
+        }
 
         return true
     }
