@@ -91,6 +91,8 @@
 		A1000125 /* AnalyticsDashboardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000125 /* AnalyticsDashboardTests.swift */; };
 		A2000126 /* AnalyticsDashboardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsDashboardUITests.swift; sourceTree = "<group>"; };
 		A1000126 /* AnalyticsDashboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000126 /* AnalyticsDashboardUITests.swift */; };
+		A2000130 /* AnalyticsAveragesFilteringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsAveragesFilteringTests.swift; sourceTree = "<group>"; };
+		A1000130 /* AnalyticsAveragesFilteringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000130 /* AnalyticsAveragesFilteringTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -478,6 +480,7 @@
 				A2000109 /* BreakFlowManagerTests.swift */,
 				A2000111 /* DeepFocusSessionExitCompletionTests.swift */,
 				A2000125 /* AnalyticsDashboardTests.swift */,
+				A2000130 /* AnalyticsAveragesFilteringTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -908,6 +911,7 @@
 				A1000109 /* BreakFlowManagerTests.swift in Sources */,
 				A1000111 /* DeepFocusSessionExitCompletionTests.swift in Sources */,
 				A1000125 /* AnalyticsDashboardTests.swift in Sources */,
+				A1000130 /* AnalyticsAveragesFilteringTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
