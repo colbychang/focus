@@ -1,0 +1,39 @@
+{
+  "featureId": "analytics-trends-categories",
+  "reviewedAt": "2026-04-06T22:30:00.000Z",
+  "commitId": "b8138e12f02b23376d59ba4fc0ef0c9e272b1378",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "All four services (TrendDetector, CategoryAggregator, ModeTypeBreakdown, DeepFocusStatsCalculator) are implemented cleanly as Sendable value types in FocusCore/Sources/FocusCore/Services/, following established patterns. 54 unit tests covering all required scenarios pass. Logic is correct throughout. One minor observation about semantic interpretation of CategoryAggregator is noted below as non-blocking.",
+    "issues": [
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/CategoryAggregator.swift",
+        "line": 69,
+        "severity": "non_blocking",
+        "description": "The feature description mentions 'aggregates usage under user-defined focus mode groups (matching FamilyActivityPicker selections). Apps not in any group go to Uncategorized.' This phrasing suggests app-level ScreenTimeEntry aggregation grouped by FamilyActivityPicker tokens. The implementation instead groups DeepFocusSessions by their associated FocusMode name, treating focus mode names as category names and sessions without a focus mode as 'Uncategorized'. The validation contract (VAL-STATS-007) confirms the intended evidence is 'per-category totals, uncategorized handling, and sum consistency', which the implementation satisfies. The session-by-focus-mode grouping is a reasonable and consistent interpretation with the existing data model (DeepFocusSession has a focusMode relationship but no direct ScreenTimeEntry). All tests pass and expected behaviors are met. The ambiguity in the feature description ('FamilyActivityPicker selections') could be clarified for future features."
+      },
+      {
+        "file": "FocusCore/Sources/FocusCore/Services/ModeTypeBreakdown.swift",
+        "line": 109,
+        "severity": "non_blocking",
+        "description": "In computeWithAllModes, 'Deep Focus' is always initialized to 0 and included in the result even when allModeNames already contains 'Deep Focus'. If 'Deep Focus' appears in allModeNames, it gets initialized twice (both from the loop and explicitly), which is harmless (second write is idempotent). However, it may cause 'Deep Focus' to appear in the output even when the caller never passed it in allModeNames, which could be unexpected. The zero-session-modes test verifies this behavior is intentional, and the grand total remains consistent since 'Deep Focus' contributes 0 to both the types array and the grandTotal when no unlinked sessions exist."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "The skill procedure specifies 'Write Tests First (TDD)' — create test file, run to confirm they fail, then implement. The transcript shows implementation files (TrendDetector.swift, CategoryAggregator.swift, ModeTypeBreakdown.swift, DeepFocusStatsCalculator.swift) were each created before the test file (TrendsCategoriesStatsTests.swift). The worker created the four service files first, then the test file in a single creation, then ran tests (discovering one failure and fixing it). This is not strictly TDD but is a practical approach for fully-new services with no existing stubs. The skill's TDD guidance may benefit from a note allowing simultaneous creation for net-new services without prior stubs.",
+      "evidence": "Transcript shows: Create TrendDetector.swift → Create CategoryAggregator.swift → Create ModeTypeBreakdown.swift → Create DeepFocusStatsCalculator.swift → Create TrendsCategoriesStatsTests.swift → xcodebuild test (1 failure) → Edit to fix test data → xcodebuild test (pass)."
+    },
+    {
+      "area": "knowledge",
+      "observation": "The FocusCore Swift Package auto-discovers new .swift source files without manual Xcode project registration (confirmed by the worker). Test files, however, DO require manual registration in Focus.xcodeproj/project.pbxproj. The worker correctly identified this distinction and added the test file registration. This pattern (SPM auto-discovery for sources, manual pbxproj registration for test files) is not documented in AGENTS.md or architecture.md and could save future workers the investigation time.",
+      "evidence": "Transcript shows worker reading FocusCore/Package.swift and concluding 'I only need to add the test file to the Xcode project's FocusTests target', then performing three Edit operations on project.pbxproj to register A2000131/A1000131 entries. skillFeedback.deviations is empty, suggesting this was resolved through codebase exploration."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The analytics-trends-categories feature is fully and correctly implemented. TrendDetector correctly classifies data patterns (increasing/decreasing/stable/undetermined) with configurable thresholds and spike detection (>2x moving average). CategoryAggregator groups completed sessions by focus mode name with 'Uncategorized' fallback, with all category totals summing to the grand total. ModeTypeBreakdown aggregates focus time by mode name with 'Deep Focus' as the fallback label, supports computeWithAllModes for zero-session modes, and maintains sum consistency. DeepFocusStatsCalculator computes all six required metrics (started, completed, bypasses, breaks, total time, completion rate) correctly excluding abandoned sessions' elapsed time from focus time. All 54 unit tests pass (verified by xcodebuild with exit code 0 in handoff). The two non-blocking issues are minor edge-case observations that do not affect correctness or test coverage. The review status is PASS."
+}

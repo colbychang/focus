@@ -1,0 +1,88 @@
+{
+  "milestone": "analytics",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "build": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet",
+      "exitCode": 0,
+      "note": "Also serves as typecheck — no compilation errors"
+    },
+    "test": {
+      "passed": true,
+      "command": "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test -scheme Focus -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing FocusTests -parallel-testing-enabled NO CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO",
+      "exitCode": 0,
+      "note": "371 tests in 37 suites passed. Timer-based test suites caused individual test timeouts (22s each) and runner restarts, but all tests ultimately passed with 0 failures. This is the known timer-hang behavior documented in testing-patterns.md."
+    },
+    "lint": {
+      "passed": true,
+      "command": "N/A — no lint command configured in services.yaml",
+      "exitCode": 0,
+      "note": "No lint command is configured. Build (typecheck) passes cleanly."
+    }
+  },
+  "reviewsSummary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library/testing-patterns.md",
+      "description": "Extended 'VStack/HStack .accessibilityIdentifier Overrides Children' section to also mention NavigationStack as an affected container type. Added note that elements inside NavigationStack should be searched by label text rather than accessibility identifier.",
+      "sourceFeature": "analytics-dashboard-history"
+    },
+    {
+      "target": "library/testing-patterns.md",
+      "description": "Added new section 'Full FocusTests Suite Times Out (>600s) — Run Suites Individually' documenting the timeout behavior, root cause (timer-based suites), and workarounds using -only-testing/-skip-testing flags.",
+      "sourceFeature": "analytics-averages-filtering"
+    },
+    {
+      "target": "library/testing-patterns.md",
+      "description": "Added new section 'FocusCore Sources Auto-Discovered; Test Files Require Manual pbxproj Registration' documenting the distinction between SPM auto-discovery for source files vs. manual Xcode project registration for test files.",
+      "sourceFeature": "analytics-trends-categories"
+    },
+    {
+      "target": "library/environment.md",
+      "description": "Added 'Simulator Selection for UI Tests' section documenting that the primary iPhone 17 Pro simulator (03BD412B) consistently fails UI tests with AX notification timeouts; recommend using iPhone 17 Pro Fresh instead.",
+      "sourceFeature": "analytics-dashboard-history"
+    },
+    {
+      "target": "library/architecture.md",
+      "description": "Added 'Analytics Architecture Notes' section documenting (1) AnalyticsAggregator @ModelActor exists but is not wired to production UI, and (2) the correct active-days denominator for WeeklyAverageCalculator/MonthlyAverageCalculator despite incorrect docstrings.",
+      "sourceFeature": "analytics-charts-performance, analytics-averages-filtering"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add 'Analytics Business Logic Convention': weekly and monthly averages always divide by active days (days with at least one session), NOT by calendar days (7 or month length). Evidence: MonthlyAverageCalculator and WeeklyAverageCalculator docstrings incorrectly describe calendar-days division; the convention is only documented in VAL-CROSS-012 but not surfaced to workers. Future workers extending analytics could reintroduce a calendar-days divisor.",
+      "evidence": "analytics-averages-filtering reviewer: 'The denominator for monthly averages is active days, not calendar days. This is documented in VAL-CROSS-012 but not in AGENTS.md.' analytics-charts-performance reviewer confirmed same docstring inconsistency in WeeklyAverageCalculator.swift line 13 and MonthlyAverageCalculator.swift line 13.",
+      "isSystemic": false
+    },
+    {
+      "target": "ios-worker SKILL.md",
+      "suggestion": "Add note to the TDD step (step 3) that for net-new services with no existing stubs or compilation-compatible interfaces, implementation and tests may be created together (implementation-first is acceptable when running empty tests would require stub code that mirrors the implementation). Require that tests are run and pass before the feature is considered complete. Evidence: 2 of 4 analytics workers created implementation files before test files and reported followedProcedure: true, indicating the skill as written is difficult to follow strictly for fully-new services.",
+      "evidence": "analytics-averages-filtering reviewer: 'Transcript shows all three implementation files created before test file. handoff.skillFeedback.followedProcedure is true but deviations is empty — inconsistent.' analytics-trends-categories reviewer: same pattern observed (4 service files created, then test file, then one test failure fixed). Flagged by both as potentially systemic.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "CategoryAggregator groups sessions by focus mode name (not app-level ScreenTimeEntry) — ambiguity in feature description about FamilyActivityPicker selections",
+      "reason": "Reasonable implementation of an ambiguous spec. Validation contract (VAL-STATS-007) is satisfied. The implementation is documented in the review non-blocking issues. Not worth adding to shared knowledge."
+    },
+    {
+      "observation": "ModeTypeBreakdown.computeWithAllModes always includes 'Deep Focus' entry even when not in allModeNames",
+      "reason": "Captured as non-blocking code quality issue in review. Behavior is tested and correct. Not systemic enough for shared guidance."
+    },
+    {
+      "observation": "WeeklyAverageCalculator docstring says 'Full week: divide by 7' but implementation uses active days",
+      "reason": "Captured in architecture.md update (active-days denominator) and in non-blocking review issues. The docstring inconsistency is local to the file and can be addressed in the code directly if needed."
+    }
+  ],
+  "previousRound": null
+}

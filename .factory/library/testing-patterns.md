@@ -33,11 +33,11 @@ app.launch()
 
 ---
 
-## XCUITest: VStack/HStack `.accessibilityIdentifier` Overrides Children
+## XCUITest: VStack/HStack/NavigationStack `.accessibilityIdentifier` Overrides Children
 
-Applying `.accessibilityIdentifier()` to a SwiftUI container (`VStack`, `HStack`, `ZStack`) overrides all child element identifiers in the XCUITest accessibility hierarchy. The container's identifier replaces the children's identifiers, making individual child elements unreachable by identifier.
+Applying `.accessibilityIdentifier()` to a SwiftUI container (`VStack`, `HStack`, `ZStack`, **`NavigationStack`**) overrides all child element identifiers in the XCUITest accessibility hierarchy. The container's identifier replaces the children's identifiers, making individual child elements unreachable by identifier.
 
-**Fix:** Apply `.accessibilityIdentifier()` to individual leaf elements (Text, Button, Image), not their parent containers.
+**Fix:** Apply `.accessibilityIdentifier()` to individual leaf elements (Text, Button, Image), not their parent containers. When searching for elements inside a `NavigationStack`, use label text (`app.staticTexts["My Label"]`) rather than accessibility identifiers.
 
 ```swift
 // BAD — child identifiers are overridden
@@ -54,7 +54,7 @@ VStack {
 }
 ```
 
-**Discovered in:** `foundation-app-shell` worker handoff (discoveredIssues[0]).
+**Discovered in:** `foundation-app-shell` worker handoff (discoveredIssues[0]); NavigationStack case confirmed by `analytics-dashboard-history` worker.
 
 ---
 
@@ -182,6 +182,53 @@ public final class SomeService {
 Note: `nonisolated(unsafe)` is required to access the property in a `nonisolated deinit` (even though the compiler warns it "has no effect" — it does suppress the actor isolation error). This applies to `DeepFocusSessionManager.timer` and `BreakFlowManager.breakTimer`.
 
 **Discovered in:** `scrutiny-validator-deep-focus` — tests using `DeepFocusSessionManager` and `BreakFlowManager` hung indefinitely without this fix.
+
+---
+
+## Full FocusTests Suite Times Out (>600s) — Run Suites Individually
+
+Running the entire `FocusTests` target at once causes a timeout beyond 600 seconds. This is due to timer-based test suites (`DeepFocusSessionManagerTests`, `BreakFlowManagerTests`, `BypassFlowManagerTests`) that use `Timer.scheduledTimer`. Even with `-parallel-testing-enabled NO`, the runner restarts per-test after 22-second individual test timeouts, making the total wall-clock time prohibitive.
+
+**Workaround:** Run tests in subsets using `-only-testing` or `-skip-testing`:
+```bash
+# Run only analytics tests
+DEVELOPER_DIR=... xcodebuild test -scheme Focus -destination '...' \
+    -only-testing FocusTests/AnalyticsDashboardTests \
+    -only-testing FocusTests/AnalyticsAveragesFilteringTests \
+    -only-testing FocusTests/TrendsCategoriesStatsTests \
+    -only-testing FocusTests/ChartPerformanceTotalsTests \
+    -parallel-testing-enabled NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+
+# Skip known timer-based suites
+DEVELOPER_DIR=... xcodebuild test -scheme Focus -destination '...' \
+    -only-testing FocusTests \
+    -skip-testing FocusTests/DeepFocusSessionManagerTests \
+    -skip-testing FocusTests/BreakFlowManagerTests \
+    -skip-testing FocusTests/BypassFlowManagerTests \
+    -parallel-testing-enabled NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO
+```
+
+**Root cause:** Timer services (`DeepFocusSessionManager`, `BreakFlowManager`) schedule real `Timer.scheduledTimer` even in tests. The `.serialized` trait + `deinit` timer invalidation addresses crashes but not the 22s per-test timeout when timers fire during individual tests.
+
+**Discovered in:** `analytics-averages-filtering` worker (full suite timeout at 600s); consistent with prior deep-focus scrutiny reports.
+
+---
+
+## FocusCore Sources Auto-Discovered; Test Files Require Manual pbxproj Registration
+
+New `.swift` source files added to `FocusCore/Sources/FocusCore/` are **automatically discovered** by Swift Package Manager — no changes to `Package.swift` or `project.pbxproj` are needed for them to compile.
+
+However, **test files** added to `FocusTests/` must be **manually registered** in `Focus.xcodeproj/project.pbxproj`. Without this, the test file compiles but the tests do not appear in the test target and cannot be run.
+
+**How to add a test file to pbxproj:**
+1. Find the `/* FocusTests */` section in `project.pbxproj`
+2. Add a PBXBuildFile entry (generate a unique hex UUID)
+3. Add a PBXFileReference entry
+4. Add the file reference to the FocusTests group and the build files list
+
+Alternatively, open the project in Xcode and drag the file into the FocusTests group — Xcode handles registration automatically.
+
+**Discovered in:** `analytics-trends-categories` worker — correctly identified SPM auto-discovery for sources but manual registration needed for test file.
 
 ---
 

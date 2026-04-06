@@ -143,6 +143,24 @@ When implementing the real `ShieldServiceProtocol`, each use site must be handle
 - `suspendBlocking()`: Removes shields but preserves `currentAllowedTokens` for re-application. Use during breaks (so `reapplyBlocking()` can restore the correct config after the break).
 Using `clearBlocking()` during a break would prevent correct re-application after break ends.
 
+## Analytics Architecture Notes
+
+### AnalyticsAggregator (Background Actor — Not Yet Wired to UI)
+`FocusCore/Sources/FocusCore/Services/AnalyticsAggregator.swift` implements a `@ModelActor` background actor with paginated `FetchDescriptor` queries for large dataset aggregation. It was built to address the performance requirement of handling 900+ sessions without UI jank.
+
+**Current state:** The production UI (`StatsTabView`, `DashboardViewModel`) builds chart data and aggregates sessions synchronously on the main actor via `ChartDataBuilder` and `DateRangeFilter`. `AnalyticsAggregator` is correct but unused — no production code references it. Performance targets are met through the current synchronous path (queries ~60ms for 950 sessions).
+
+**Future work:** If session counts grow and main-thread queries cause jank, wire `AnalyticsAggregator` into `DashboardViewModel.refresh()` to move aggregation off the main actor.
+
+**Discovered in:** `analytics-charts-performance` worker.
+
+### Analytics Averages — Active Days Denominator
+Both `WeeklyAverageCalculator` and `MonthlyAverageCalculator` divide by **active days** (days with at least one session), **not** by calendar days (7 or the days-in-month count). This is correct per `VAL-CROSS-012`.
+
+The docstrings in both files incorrectly describe the divisor as full-period length — ignore them; the implementation is authoritative.
+
+**Discovered in:** `analytics-averages-filtering` and `analytics-charts-performance` workers.
+
 ## Key Constraints
 
 1. **No Family Controls entitlement yet** — all Screen Time calls go through protocol mocks

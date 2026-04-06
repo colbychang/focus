@@ -36,3 +36,11 @@ Environment variables, external dependencies, and setup notes.
 - Simulator cannot test: ManagedSettingsStore blocking, DeviceActivityMonitor callbacks, Shield extension UI
 - xcode-select must point to Xcode.app (not CommandLineTools)
 - iOS simulator runtime must be downloaded separately
+
+## Simulator Selection for UI Tests
+
+The **primary iPhone 17 Pro simulator** (device ID `03BD412B-FD96-4E2F-A1C0-9A1C680D3A18`) consistently fails UI tests with `"Timed out waiting for AX loaded notification"`. Use the **iPhone 17 Pro Fresh** simulator (device ID `8FC9FB2D-...`) instead for reliable UI test execution.
+
+If UI tests fail with AX notification timeouts, try a different simulator variant before debugging the test logic.
+
+**Discovered in:** `analytics-dashboard-history` worker (all 8 UI tests initially failed with AX timeout on primary simulator; switching to Fresh resolved them).
