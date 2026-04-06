@@ -102,6 +102,7 @@ struct FocusApp: App {
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
+
     }
 
     var body: some Scene {
@@ -112,9 +113,14 @@ struct FocusApp: App {
                 notificationService: notificationService
             )
             .task {
+                // Seed analytics test data for UI tests (before reconciliation)
+                if ProcessInfo.processInfo.arguments.contains("--seed-analytics-data") {
+                    FocusApp.seedAnalyticsTestData(modelContext: modelContainer.mainContext)
+                }
                 // Reconcile extension-recorded sessions into SwiftData on launch
                 sessionRecorder.reconcileSessions(modelContext: modelContainer.mainContext)
             }
+
             .task {
                 // Check for launch argument to show a test notification
                 let args = ProcessInfo.processInfo.arguments
@@ -201,6 +207,68 @@ struct FocusApp: App {
             initialStatus: initialStatus,
             shouldApprove: shouldApprove
         )
+    }
+
+    // MARK: - Analytics Test Data Seeding
+
+    /// Seeds test data for analytics UI tests.
+    /// Creates completed and abandoned sessions with known properties for verification.
+    @MainActor @preconcurrency
+    static func seedAnalyticsTestData(modelContext: ModelContext) {
+        let calendar = Calendar.current
+        let now = Date()
+
+        // Session 1: Completed, today, 30 min, Deep Focus
+        let s1 = DeepFocusSession(
+            startTime: calendar.date(byAdding: .hour, value: -2, to: now)!,
+            configuredDuration: 1800,
+            remainingSeconds: 0,
+            status: .completed,
+            bypassCount: 1,
+            breakCount: 2,
+            totalBreakDuration: 180
+        )
+        modelContext.insert(s1)
+
+        // Session 2: Completed, yesterday, 60 min, Deep Focus
+        let yesterdayStart = calendar.date(byAdding: .day, value: -1, to: now)!
+        let s2 = DeepFocusSession(
+            startTime: yesterdayStart,
+            configuredDuration: 3600,
+            remainingSeconds: 0,
+            status: .completed,
+            bypassCount: 0,
+            breakCount: 1,
+            totalBreakDuration: 120
+        )
+        modelContext.insert(s2)
+
+        // Session 3: Abandoned, today, 45 min
+        let s3 = DeepFocusSession(
+            startTime: calendar.date(byAdding: .hour, value: -1, to: now)!,
+            configuredDuration: 2700,
+            remainingSeconds: 2700,
+            status: .abandoned,
+            bypassCount: 0,
+            breakCount: 0,
+            totalBreakDuration: 0
+        )
+        modelContext.insert(s3)
+
+        // Session 4: Completed, 2 days ago, 90 min
+        let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: now)!
+        let s4 = DeepFocusSession(
+            startTime: twoDaysAgo,
+            configuredDuration: 5400,
+            remainingSeconds: 0,
+            status: .completed,
+            bypassCount: 2,
+            breakCount: 3,
+            totalBreakDuration: 300
+        )
+        modelContext.insert(s4)
+
+        try? modelContext.save()
     }
 }
 

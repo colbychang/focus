@@ -77,6 +77,20 @@
 		A1000031 /* ShieldActionExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A4000030 /* ShieldActionExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1000041 /* DeviceActivityReportExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A4000040 /* DeviceActivityReportExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A1000053 /* FocusWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A4000050 /* FocusWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A2000120 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		A1000120 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000120 /* DashboardViewModel.swift */; };
+		A2000121 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		A1000121 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000121 /* DashboardView.swift */; };
+		A2000122 /* SessionHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionHistoryView.swift; sourceTree = "<group>"; };
+		A1000122 /* SessionHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000122 /* SessionHistoryView.swift */; };
+		A2000123 /* SessionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionDetailView.swift; sourceTree = "<group>"; };
+		A1000123 /* SessionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000123 /* SessionDetailView.swift */; };
+		A2000124 /* DeviceActivityReportContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceActivityReportContainerView.swift; sourceTree = "<group>"; };
+		A1000124 /* DeviceActivityReportContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000124 /* DeviceActivityReportContainerView.swift */; };
+		A2000125 /* AnalyticsDashboardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsDashboardTests.swift; sourceTree = "<group>"; };
+		A1000125 /* AnalyticsDashboardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000125 /* AnalyticsDashboardTests.swift */; };
+		A2000126 /* AnalyticsDashboardUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsDashboardUITests.swift; sourceTree = "<group>"; };
+		A1000126 /* AnalyticsDashboardUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000126 /* AnalyticsDashboardUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -328,6 +342,7 @@
 				A20000A0 /* AuthorizationViewModel.swift */,
 				A20000C0 /* FocusModeListViewModel.swift */,
 				A20000C1 /* FocusModeFormViewModel.swift */,
+				A2000120 /* DashboardViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -342,8 +357,20 @@
 				A90000A2 /* Tabs */,
 				A90000C0 /* FocusModes */,
 				A9000100 /* DeepFocus */,
+				A9000120 /* Analytics */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A9000120 /* Analytics */ = {
+			isa = PBXGroup;
+			children = (
+				A2000121 /* DashboardView.swift */,
+				A2000122 /* SessionHistoryView.swift */,
+				A2000123 /* SessionDetailView.swift */,
+				A2000124 /* DeviceActivityReportContainerView.swift */,
+			);
+			path = Analytics;
 			sourceTree = "<group>";
 		};
 		A9000100 /* DeepFocus */ = {
@@ -450,6 +477,7 @@
 				A2000107 /* BypassFlowManagerTests.swift */,
 				A2000109 /* BreakFlowManagerTests.swift */,
 				A2000111 /* DeepFocusSessionExitCompletionTests.swift */,
+				A2000125 /* AnalyticsDashboardTests.swift */,
 			);
 			path = FocusTests;
 			sourceTree = "<group>";
@@ -468,6 +496,7 @@
 				A2000110 /* BreakDurationSelectionUITests.swift */,
 				A2000112 /* DeepFocusSessionExitUITests.swift */,
 				A2000113 /* NavigationIntegrationUITests.swift */,
+				A2000126 /* AnalyticsDashboardUITests.swift */,
 			);
 			path = FocusUITests;
 			sourceTree = "<group>";
@@ -810,6 +839,11 @@
 				A1000101 /* DeepFocusSessionView.swift in Sources */,
 				A1000104 /* DeepFocusLauncherView.swift in Sources */,
 				A1000108 /* BreakDurationSelectionView.swift in Sources */,
+				A1000120 /* DashboardViewModel.swift in Sources */,
+				A1000121 /* DashboardView.swift in Sources */,
+				A1000122 /* SessionHistoryView.swift in Sources */,
+				A1000123 /* SessionDetailView.swift in Sources */,
+				A1000124 /* DeviceActivityReportContainerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -873,6 +907,7 @@
 				A1000107 /* BypassFlowManagerTests.swift in Sources */,
 				A1000109 /* BreakFlowManagerTests.swift in Sources */,
 				A1000111 /* DeepFocusSessionExitCompletionTests.swift in Sources */,
+				A1000125 /* AnalyticsDashboardTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -891,6 +926,7 @@
 				A1000110 /* BreakDurationSelectionUITests.swift in Sources */,
 				A1000112 /* DeepFocusSessionExitUITests.swift in Sources */,
 				A1000113 /* NavigationIntegrationUITests.swift in Sources */,
+				A1000126 /* AnalyticsDashboardUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
