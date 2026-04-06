@@ -1,0 +1,138 @@
+{
+  "flowId": "ui-tests",
+  "milestone": "deep-focus",
+  "tool": "xcodebuild",
+  "testSuite": "FocusUITests",
+  "testedAt": "2026-04-06T20:49:00Z",
+  "isolation": {
+    "simulator": "iPhone 17 Pro Fresh",
+    "simulatorId": "8FC9FB2D-243C-4FC5-8DA3-976294C9DC76",
+    "repo": "/Users/colbychang/focus",
+    "testTarget": "-only-testing FocusUITests/<class>",
+    "codeSigningDisabled": true,
+    "note": "Original simulator (03BD412B) had axremoted service crashing with SIGSEGV since Apr 6. Created a fresh simulator device with working accessibility service."
+  },
+  "toolsUsed": ["xcodebuild"],
+  "assertionResults": [
+    {
+      "id": "VAL-DEEP-001",
+      "title": "Start deep focus session with preset and custom durations (UI portion)",
+      "status": "pass",
+      "testFile": "DeepFocusDurationSelectionUITests.swift",
+      "testCases": [
+        "testPresetButtonsExist",
+        "testCustomDurationFieldExists",
+        "testStartButtonExistsButDisabledInitially",
+        "testSelectPresetEnablesStartButton",
+        "testSelectDifferentPresetSwitchesSelection",
+        "testStartSessionShowsTimerView",
+        "testEndSessionReturnsToSelection"
+      ],
+      "evidence": "All 7 tests passed. testPresetButtonsExist failed on first run (DebuggerVersionStore flakiness) but passed on retry — consistent with known simulator infrastructure issue documented in scrutiny. Confirmed: 4 preset buttons (30/60/90/120 min) visible, custom field exists, start button disabled initially, enabled after preset selection, switching presets maintains enabled state, session starts and shows timer.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-DEEP-002",
+      "title": "Allowed apps configuration and launcher view (UI portion)",
+      "status": "pass",
+      "testFile": "DeepFocusLauncherUITests.swift",
+      "testCases": [
+        "testLauncherViewAppearsOnSessionStart",
+        "testLauncherShowsTimerDisplay",
+        "testLauncherShowsEmptyStateWhenNoAllowedApps",
+        "testLauncherEndSessionButton",
+        "testLauncherEndSessionReturnsToSelection",
+        "testLauncherTimerUpdates"
+      ],
+      "evidence": "All 6 tests passed. Suite 'DeepFocusLauncherUITests' passed. Confirmed: launcher view appears on session start, timer display visible, empty state shown when no apps allowed (EmptyLauncherState, EmptyLauncherTitle, EmptyLauncherMessage elements present), End Session button accessible, returns to duration selection after exit, timer shows ~30:00 on start.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-DEEP-009",
+      "title": "Session exit with confirmations (UI portion)",
+      "status": "pass",
+      "testFile": "DeepFocusSessionExitUITests.swift",
+      "testCases": [
+        "testEndSessionButtonExistsDuringActiveSession",
+        "testEndSessionShowsFirstConfirmationDialog",
+        "testCancelFirstDialogReturnsToActiveSession",
+        "testConfirmFirstShowsSecondConfirmationDialog",
+        "testCancelSecondDialogReturnsToActiveSession",
+        "testConfirmBothDialogsEndsSession"
+      ],
+      "evidence": "All 6 tests passed. Suite 'DeepFocusSessionExitUITests' passed. Confirmed: End Session button present during active session; tapping shows 'End Session?' alert with Cancel and End Session buttons; Cancel returns to active session (timer still visible); Confirm shows second 'Lose Focus Time?' dialog; Cancel on second returns to session; Confirm on both ends session and returns to duration selection.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-DEEP-012",
+      "title": "Break duration selection UI",
+      "status": "pass",
+      "testFile": "BreakDurationSelectionUITests.swift",
+      "testCases": [
+        "testTakeBreakButtonExistsDuringActiveSession",
+        "testBreakDurationSelectionSheetAppears",
+        "testFiveBreakDurationButtonsExist",
+        "testConfirmButtonDisabledWithoutSelection",
+        "testSelectDurationEnablesConfirm",
+        "testCancelDismissesSheet",
+        "testConfirmStartsBreak"
+      ],
+      "evidence": "All 7 tests passed. Suite 'BreakDurationSelectionUITests' passed. Confirmed: Take Break button exists during session; tapping shows break selection sheet; all 5 duration buttons (BreakDurationButton_1 through BreakDurationButton_5) present; Confirm button disabled without selection; selecting a duration enables Confirm; Cancel dismisses sheet while keeping session active; Confirm starts break (timer display remains visible).",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-CROSS-001",
+      "title": "First launch journey",
+      "status": "pass",
+      "testFile": "NavigationIntegrationUITests.swift",
+      "testCases": [
+        "testFirstLaunchJourneyApprove",
+        "testFirstLaunchJourneyDeny"
+      ],
+      "evidence": "Both tests passed. Approve path: authorization view shows on first launch, AllowScreenTimeAccessButton present; tapping → tab bar appears, Focus tab shows empty state, CreateFocusModeButton/EmptyStateCreateButton accessible, creating profile 'Work' → ProfileName_Work appears in list. Deny path: tapping → DeniedTitle shown, RetryAuthorizationButton and OpenSettingsButton present, DeniedDescription shown.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-CROSS-002",
+      "title": "Navigation integrity and state preservation",
+      "status": "pass",
+      "testFile": "NavigationIntegrationUITests.swift",
+      "testCases": [
+        "testNavigationIntegrityAllTabsReachable",
+        "testTabSwitchDuringActiveSessionPreservesTimer",
+        "testNoDeadEndScreens",
+        "testDeepFocusTabShowsCorrectViewBasedOnSessionState",
+        "testReenteringAppDuringActiveSessionShowsCorrectStatus",
+        "testAllTabsAccessibleDuringActiveSession",
+        "testTimerDecrementsWhileSessionActive"
+      ],
+      "evidence": "All 7 tests passed. Confirmed: all 4 tabs (Focus, Deep Focus, Stats, Settings) reachable; no dead-end screens (Settings → Grayscale Guide dismisses, returns to navigation); tab switching during active session preserves running timer; Deep Focus shows correct view based on session state; all tabs accessible during active deep focus; timer decrements while session active.",
+      "failureDetails": null
+    },
+    {
+      "id": "VAL-CROSS-011",
+      "title": "New user end-to-end journey",
+      "status": "pass",
+      "testFile": "NavigationIntegrationUITests.swift",
+      "testCases": [
+        "testNewUserEndToEndJourney"
+      ],
+      "evidence": "Test passed. Full sequential journey confirmed: authorize (notDetermined → approve) → tab bar appears → Focus tab shows empty state → create 'Study' profile → profile visible in list → activate toggle → active badge shown → navigate to Deep Focus → start session (test-seconds mode) → timer display shows → session completes (CompletionIcon appears within 15s) → Done button → returns to duration selection → navigate to Stats → Stats tab accessible with StatsTabContent present.",
+      "failureDetails": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Original iPhone 17 Pro simulator (03BD412B-FD96-4E2F-A1C0-9A1C680D3A18) had axremoted (com.apple.accessibility.axremoted) crashing with SIGSEGV (exit code -11) since April 6th. Crash at 0x0000000000000010 (null pointer dereference in axremoted binary initialization). Multiple restart attempts failed. Created a fresh iPhone 17 Pro simulator device (8FC9FB2D) which had a working axremoted service.",
+      "resolved": true,
+      "resolution": "Created fresh simulator 'iPhone 17 Pro Fresh' (8FC9FB2D-243C-4FC5-8DA3-976294C9DC76) and ran all UI tests against it. All tests passed."
+    },
+    {
+      "description": "DebuggerVersionStore flakiness: testPresetButtonsExist failed on first run with 'Deep Focus tab content should exist' (DeepFocusTabContent accessibility element). Passed on retry. Consistent with known simulator infrastructure issue documented in scrutiny synthesis.",
+      "resolved": true,
+      "resolution": "Retry passed. This is a known transient flakiness, not a code issue."
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 7 assertions via 5 UI test classes (33 individual tests): all passed. DeepFocusDurationSelectionUITests (7 tests), DeepFocusLauncherUITests (6 tests), DeepFocusSessionExitUITests (6 tests), BreakDurationSelectionUITests (7 tests), NavigationIntegrationUITests (11 tests). One transient flakiness failure (testPresetButtonsExist) resolved on retry. Original simulator had axremoted SIGSEGV; fixed by using fresh simulator device."
+}

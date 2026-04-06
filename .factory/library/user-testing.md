@@ -6,9 +6,28 @@ This is a pure iOS app with no backend services. Testing is performed via xcodeb
 
 ## Simulator
 
-- **Device:** iPhone 17 Pro (simulator ID: 03BD412B-FD96-4E2F-A1C0-9A1C680D3A18)
+- **Primary Device:** iPhone 17 Pro (simulator ID: 03BD412B-FD96-4E2F-A1C0-9A1C680D3A18)
+- **Backup Device:** iPhone 17 Pro Fresh (simulator ID: 8FC9FB2D-243C-4FC5-8DA3-976294C9DC76)
 - **OS:** iOS 26.4
 - **Status:** Pre-booted and available
+
+### Simulator axremoted Bug (April 2026)
+
+The primary iPhone 17 Pro simulator (03BD412B) developed a crashing `axremoted` service on April 6, 2026. Symptom: UI tests fail with "Timed out waiting for AX loaded notification". Root cause: `com.apple.accessibility.axremoted` crashes with SIGSEGV at address 0x10 (null pointer dereference) every time it starts.
+
+**Workaround:** Create a fresh simulator device using the same runtime:
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun simctl create "iPhone 17 Pro Fresh" "iPhone 17 Pro" "com.apple.CoreSimulator.SimRuntime.iOS-26-4"
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun simctl boot <new-id>
+```
+
+Then run UI tests against the new device using `-destination 'platform=iOS Simulator,id=<new-id>'`.
+
+**Verification:** Before running UI tests, confirm axremoted is healthy:
+```bash
+xcrun simctl spawn <device-id> launchctl list | grep axremoted
+# Should show "0" exit code, NOT "-11"
+```
 
 ## Environment Setup
 
@@ -37,10 +56,19 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 
 **UI tests:**
 ```bash
+# If primary simulator has axremoted issues, use the fresh backup device
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   -scheme Focus \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
   -only-testing FocusUITests \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1
+
+# Or specify simulator by ID (use fresh device if primary has axremoted SIGSEGV):
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -scheme Focus \
+  -destination 'platform=iOS Simulator,id=8FC9FB2D-243C-4FC5-8DA3-976294C9DC76' \
+  -only-testing FocusUITests \
+  -parallel-testing-enabled NO \
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1
 ```
 
@@ -78,6 +106,16 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 | GrayscaleGuideUITests.swift | VAL-FOCUS-009 |
 | FocusNotificationUITests.swift | VAL-CROSS-008 |
 | AppShellUITests.swift | Foundation tests |
+
+### Deep Focus UI Tests (FocusUITests/)
+
+| File | Assertions |
+|------|-----------|
+| DeepFocusDurationSelectionUITests.swift | VAL-DEEP-001 (UI portion) |
+| DeepFocusLauncherUITests.swift | VAL-DEEP-002 (UI portion) |
+| DeepFocusSessionExitUITests.swift | VAL-DEEP-009 (UI portion) |
+| BreakDurationSelectionUITests.swift | VAL-DEEP-012 |
+| NavigationIntegrationUITests.swift | VAL-CROSS-001, VAL-CROSS-002, VAL-CROSS-011 |
 
 ### Missing UI Tests
 
