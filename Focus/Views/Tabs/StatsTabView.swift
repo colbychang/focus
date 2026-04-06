@@ -5,15 +5,21 @@ import FocusCore
 // MARK: - StatsTabView
 
 /// The Stats tab showing the analytics dashboard, session history,
-/// and DeviceActivityReport integration.
+/// charts, and DeviceActivityReport integration.
 struct StatsTabView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var viewModel: DashboardViewModel?
+    @State private var dailyChartData: [BarChartDataPoint] = []
+    @State private var weeklyChartData: [LineChartDataPoint] = []
 
     var body: some View {
         NavigationStack {
-            StatsContentView(viewModel: viewModel)
-                .navigationTitle("Stats")
+            StatsContentView(
+                viewModel: viewModel,
+                dailyChartData: dailyChartData,
+                weeklyChartData: weeklyChartData
+            )
+            .navigationTitle("Stats")
         }
         .accessibilityIdentifier("StatsTabContent")
         .onAppear {
@@ -22,15 +28,33 @@ struct StatsTabView: View {
             } else {
                 viewModel?.refresh()
             }
+            buildChartData()
         }
+    }
+
+    /// Builds chart data from the view model's sessions.
+    private func buildChartData() {
+        guard let viewModel else { return }
+        let chartBuilder = ChartDataBuilder()
+
+        dailyChartData = chartBuilder.buildDailyBarChartData(
+            sessions: viewModel.allSessions,
+            lastDays: 7
+        )
+        weeklyChartData = chartBuilder.buildWeeklyLineChartData(
+            sessions: viewModel.allSessions,
+            weeks: 12
+        )
     }
 }
 
 // MARK: - StatsContentView
 
-/// Inner content view with the dashboard, history link, and screen time section.
+/// Inner content view with the dashboard, charts, history link, and screen time section.
 struct StatsContentView: View {
     let viewModel: DashboardViewModel?
+    let dailyChartData: [BarChartDataPoint]
+    let weeklyChartData: [LineChartDataPoint]
 
     var body: some View {
         if let viewModel {
@@ -39,6 +63,14 @@ struct StatsContentView: View {
                     // Dashboard summary cards
                     DashboardView(viewModel: viewModel)
                         .padding(.horizontal)
+
+                    // Charts section
+                    if !viewModel.isEmpty {
+                        AnalyticsChartsView(
+                            dailyData: dailyChartData,
+                            weeklyData: weeklyChartData
+                        )
+                    }
 
                     // Session History link
                     NavigationLink {
