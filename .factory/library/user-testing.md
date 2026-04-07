@@ -117,6 +117,22 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 | BreakDurationSelectionUITests.swift | VAL-DEEP-012 |
 | NavigationIntegrationUITests.swift | VAL-CROSS-001, VAL-CROSS-002, VAL-CROSS-011 |
 
+### Analytics Unit Tests (FocusTests/)
+
+| File | Assertions |
+|------|-----------|
+| AnalyticsDashboardTests.swift | VAL-STATS-001, VAL-STATS-003, VAL-STATS-012, VAL-STATS-014 |
+| AnalyticsAveragesFilteringTests.swift | VAL-STATS-004, VAL-STATS-005, VAL-STATS-008, VAL-STATS-009, VAL-STATS-015 |
+| TrendsCategoriesStatsTests.swift | VAL-STATS-006, VAL-STATS-007, VAL-STATS-010, VAL-STATS-011 |
+| ChartPerformanceTotalsTests.swift | VAL-STATS-013, VAL-STATS-016, VAL-CROSS-012 |
+
+### Analytics UI Tests (FocusUITests/)
+
+| File | Assertions |
+|------|-----------|
+| AnalyticsDashboardUITests.swift | VAL-STATS-001, VAL-STATS-002, VAL-STATS-003 |
+| AnalyticsChartsUITests.swift | VAL-STATS-016 |
+
 ### Missing UI Tests
 
 - VAL-FOCUS-005: FamilyActivityPicker is not testable in simulator (requires entitlement) — unit test covers token persistence
@@ -149,6 +165,67 @@ Reason: All tests share the same iOS Simulator instance. Running multiple xcodeb
 - Look for XCTest pass/fail output
 - If a test fails, capture the failure message and screenshot path from output
 - UI tests for FamilyActivityPicker (VAL-FOCUS-005) cannot be run due to FamilyControls entitlement restriction — this is a known limitation documented in the mission README
+
+## Swift Testing Suite Names for -only-testing Flag
+
+The `-only-testing` flag requires the Swift struct type name, NOT the file name, for Swift Testing (@Suite/@Test) suites.
+
+**WRONG:** `-only-testing FocusTests/AnalyticsDashboardTests` (this is the file name — returns 0 tests)
+**CORRECT:** `-only-testing FocusTests/DashboardViewModelTests` (the struct type name inside the file)
+
+Analytics test suite struct names (as of milestone 4):
+- File `AnalyticsDashboardTests.swift` → suites: `DashboardViewModelTests`, `StreakCalculatorTests`
+- File `AnalyticsAveragesFilteringTests.swift` → suites: `WeeklyAverageCalculatorTests`, `MonthlyAverageCalculatorTests`, `DateRangeFilterTests`, `HistoricalDataRetentionTests`, `MidnightSpanningAndLongSessionTests`
+- File `TrendsCategoriesStatsTests.swift` → suites: `TrendDetectorTests`, `CategoryAggregatorTests`, `ModeTypeBreakdownTests`, `DeepFocusStatsCalculatorTests`
+- File `ChartPerformanceTotalsTests.swift` → suites: `ChartDataBuilderTests`, `LargeDatasetPerformanceTests`, `AnalyticsTotalsConsistencyTests`
+
+## Running Specific Analytics Tests Without Timeout
+
+Running all FocusTests together times out (>600s) because some non-analytics test suites crash the test runner and cause repeated restarts. Run analytics tests in targeted batches:
+
+```bash
+# Batch 1: Dashboard + Streak (25 tests, ~30s)
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -scheme Focus \
+  -destination 'platform=iOS Simulator,id=8FC9FB2D-243C-4FC5-8DA3-976294C9DC76' \
+  -only-testing FocusTests/StreakCalculatorTests \
+  -only-testing FocusTests/DashboardViewModelTests \
+  -parallel-testing-enabled NO \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1
+
+# Batch 2: Averages + Filtering (46 tests, ~30s)
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -scheme Focus \
+  -destination 'platform=iOS Simulator,id=8FC9FB2D-243C-4FC5-8DA3-976294C9DC76' \
+  -only-testing FocusTests/WeeklyAverageCalculatorTests \
+  -only-testing FocusTests/MonthlyAverageCalculatorTests \
+  -only-testing FocusTests/DateRangeFilterTests \
+  -only-testing FocusTests/HistoricalDataRetentionTests \
+  -only-testing FocusTests/MidnightSpanningAndLongSessionTests \
+  -parallel-testing-enabled NO \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1
+
+# Batch 3: Trends + Categories (54 tests, ~30s)
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -scheme Focus \
+  -destination 'platform=iOS Simulator,id=8FC9FB2D-243C-4FC5-8DA3-976294C9DC76' \
+  -only-testing FocusTests/TrendDetectorTests \
+  -only-testing FocusTests/CategoryAggregatorTests \
+  -only-testing FocusTests/ModeTypeBreakdownTests \
+  -only-testing FocusTests/DeepFocusStatsCalculatorTests \
+  -parallel-testing-enabled NO \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1
+
+# Batch 4: Charts + Performance (30 tests, ~30s)
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -scheme Focus \
+  -destination 'platform=iOS Simulator,id=8FC9FB2D-243C-4FC5-8DA3-976294C9DC76' \
+  -only-testing FocusTests/ChartDataBuilderTests \
+  -only-testing FocusTests/LargeDatasetPerformanceTests \
+  -only-testing FocusTests/AnalyticsTotalsConsistencyTests \
+  -parallel-testing-enabled NO \
+  CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO 2>&1
+```
 
 ## Known Limitations
 

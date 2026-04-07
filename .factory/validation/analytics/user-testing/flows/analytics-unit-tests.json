@@ -1,0 +1,350 @@
+{
+  "groupId": "analytics-unit-tests",
+  "testedAt": "2026-04-06T20:06:50-04:00",
+  "isolation": {
+    "type": "iOS unit tests (pure on-device, no backend)",
+    "repoRoot": "/Users/colbychang/focus",
+    "simulator": "iPhone 17 Pro Fresh (ID: 8FC9FB2D-243C-4FC5-8DA3-976294C9DC76)",
+    "scheme": "Focus",
+    "testTarget": "FocusTests",
+    "testClasses": [
+      "StreakCalculatorTests",
+      "DashboardViewModelTests",
+      "WeeklyAverageCalculatorTests",
+      "MonthlyAverageCalculatorTests",
+      "DateRangeFilterTests",
+      "HistoricalDataRetentionTests",
+      "MidnightSpanningAndLongSessionTests",
+      "TrendDetectorTests",
+      "CategoryAggregatorTests",
+      "ModeTypeBreakdownTests",
+      "DeepFocusStatsCalculatorTests",
+      "ChartDataBuilderTests",
+      "LargeDatasetPerformanceTests",
+      "AnalyticsTotalsConsistencyTests"
+    ]
+  },
+  "toolsUsed": ["xcodebuild test"],
+  "assertions": [
+    {
+      "id": "VAL-STATS-001",
+      "title": "Dashboard summary cards — ViewModel computations with seeded data, empty state",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run DashboardViewModelTests suite",
+          "expected": "totalFocusTime, sessionsCompleted, currentStreak computed correctly; empty state shows 0/N/A",
+          "observed": "All 12 DashboardViewModel tests passed: emptyState (isEmpty=true, all zeros), totalFocusTimeCompletedOnly (5400s), abandonedExcluded (0s), sessionsCompletedCount (2), streakWithSeededData (3), sessionsSortedDescending, reactiveUpdate, multipleRefreshes, formatDuration, formatDurationDetailed, statusInfo, modeTypeLabel"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"DashboardViewModel Tests\" passed after 0.021 seconds. 12 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-003",
+      "title": "Session history list with detail view — unit test: sort order, detail contents",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run DashboardViewModelTests — sessionsSortedDescending test",
+          "expected": "allSessions in reverse chronological order; helper methods provide correct detail content",
+          "observed": "sessionsSortedDescending: allSessions[0] most recent (configuredDuration=3600), [1] middle (900), [2] oldest (1800). statusInfo returns correct label+color for completed/abandoned. modeTypeLabel returns 'Deep Focus' for sessions without focus mode. formatDurationDetailed returns H:MM:SS format."
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"DashboardViewModel Tests\" passed after 0.021 seconds. sessionsSortedDescending, statusInfo, modeTypeLabel, formatDurationDetailed all passed."
+      },
+      "issues": "UI test portion (detail view navigation) is not tested here — unit test covers sort order and detail display helper methods only."
+    },
+    {
+      "id": "VAL-STATS-004",
+      "title": "Weekly average calculation — full week, single day, partial week, boundary",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run WeeklyAverageCalculatorTests suite",
+          "expected": "Full week mean, single day, partial week (avg over days with data), week boundary per locale",
+          "observed": "All 9 tests passed: fullWeekAverage (3600s avg over 7 days), singleDayAverage (3600s), partialWeekAverage (3600s over 3 days), multipleSameDay (3600s for 2 sessions same day), emptyWeek (0), abandonedExcluded (only completed counted), weekBoundarySunday (Apr 4 vs Apr 5 in different weeks), weekBoundaryMonday (Apr 5 vs Apr 6 in different weeks), weekDateRange (Mar 29–Apr 5 for week containing Apr 1)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"WeeklyAverageCalculator Tests\" passed after 0.027 seconds. 9 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-005",
+      "title": "Monthly average calculation — variable months, empty, partial, leap year",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run MonthlyAverageCalculatorTests suite",
+          "expected": "Mean with correct day counts, empty month=0, partial month, leap year Feb",
+          "observed": "All 13 tests passed: january31Days (3600s avg over 5 days), february28Days (1800s avg over 3 days), april30Days (2400s avg over 3 days), emptyMonth (0), abandonedOnlyMonth (0), partialMonth (2700s), leapYearFebruary (2700s with Feb 29 session), leapYearDaysInMonth (29), nonLeapYearDaysInMonth (28), daysInJanuary (31), daysInApril (30), adjacentMonthsExcluded, multipleSameDay (3600s, 1 day denominator)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"MonthlyAverageCalculator Tests\" passed after 0.024 seconds. 13 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-006",
+      "title": "Trend detection — increasing, decreasing, and spikes",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run TrendDetectorTests suite",
+          "expected": "Increasing/decreasing/stable/.undetermined (< 7 pts). Spike > 2x moving avg. No false positives.",
+          "observed": "All 24 tests passed: insufficientData (<7 pts = .undetermined), emptyData, singlePoint, sixPoints. increasingTrend ([100..700] = .increasing), mostlyIncreasing (70% inc), gradualIncrease (14 pts). decreasingTrend ([700..100]), mostlyDecreasing. flatData (.stable), normalVariance (.stable), alternatingData (.stable). spikeDetected (300 > 2×100, ratio=3.0), multipleSpikes (2 detected), exactlyAt2x (200 NOT spike), justAbove2x (201 IS spike). noFalsePositivesStable, noFalsePositivesGradual, zeroMovingAverage (guard). customMinDataPoints (3 pts threshold), customSpikeThreshold (3× threshold), customIncreasingThreshold (80%). exactlySevenPoints, spikeWithIncrease."
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"TrendDetector Tests\" passed after 0.015 seconds. 24 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-007",
+      "title": "Category aggregation with user-defined groups",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run CategoryAggregatorTests suite",
+          "expected": "User-defined groups, uncategorized fallback, sum to grand total",
+          "observed": "All 8 tests passed: userDefinedGroups (Work=5400, Study=2400), uncategorizedSessions (uncategorized=5400), mixedSessions (Work=1800, uncategorized=3600), sumConsistency (grandTotal=8700 matches category sum), sumConsistencyManyCategories (5 modes + uncategorized), abandonedExcluded (only completed), emptyState (empty), onlyAbandoned (empty)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"CategoryAggregator Tests\" passed after 0.035 seconds. 8 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-008",
+      "title": "Date range filtering — boundaries, timezone, single day, empty",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run DateRangeFilterTests suite",
+          "expected": "Single day, empty range, midnight-boundary sessions, timezone-aware",
+          "observed": "All 9 tests passed: basicFiltering (3 of 4 sessions in March), singleDayFilter (3 of 4 on March 15), emptyRange (0 results for April filter with March data), noSessions (empty input), midnightBoundary (midnight session on day, not prev day), timezoneAwareFiltering (NY=Mar 15, UTC=Mar 16 for 11PM ET session), startInclusiveEndExclusive (start inclusive, end exclusive), groupByDay (2 days, 2+1 sessions), dailyFocusTimes (abandoned excluded)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"DateRangeFilter Tests\" passed after 0.016 seconds. 9 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-009",
+      "title": "Historical data retention — old-dated sessions queryable",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run HistoricalDataRetentionTests suite",
+          "expected": "Sessions 30/60/90/180 days old are queryable via FetchDescriptor predicates",
+          "observed": "All 7 tests passed: sessions30DaysOld (1 session retained), sessions60DaysOld, sessions90DaysOld, sessions180DaysOld. datePredicateQuery (4 old sessions retrieved via cutoff predicate). historicalWeeklyAverage (60-day-old session used in weekly calc), historicalMonthlyAverage (90-day-old session used in monthly calc)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"HistoricalDataRetention Tests\" passed after 0.013 seconds. 7 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-010",
+      "title": "Deep focus specific statistics — started/completed/bypasses/breaks/totalTime/completionRate",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run DeepFocusStatsCalculatorTests suite",
+          "expected": "Correct per-metric computation; abandoned sessions' elapsed time excluded from total",
+          "observed": "All 14 tests passed: sessionsStarted (counts completed+abandoned+active, not idle), sessionsCompleted (only .completed), totalBypasses (sum across all started), totalBreaks (sum across all started), totalFocusTimeCompletedOnly (1800+3600=5400), abandonedExcluded (only completed 3600s, not abandoned 1800s elapsed), allAbandonedZeroFocusTime (0). completionRate (2/3≈0.667), completionRateAllComplete (1.0), completionRateAllAbandoned (0.0), completionRateEmpty (0.0). emptyState (all zeros), mixedStatuses (4 started, 2 completed, bypasses=4, breaks=3, time=5400, rate=0.5), idleSessionsExcluded"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"DeepFocusStatsCalculator Tests\" passed after 0.028 seconds. 14 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-011",
+      "title": "Focus mode type breakdown — per-type totals sum to grand total, custom types, zero-session modes",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run ModeTypeBreakdownTests suite",
+          "expected": "Per-type totals, sum consistency, custom types, zero-session modes handled",
+          "observed": "All 8 tests passed: basicBreakdown (Work=1800, Study=3600, Deep Focus=2400), sumConsistency (typeSum==grandTotal==7800), customModeTypes (Meditation=3600), zeroSessionModes (computeWithAllModes: Work=1800, Study=0, Reading=0, Deep Focus=0; sum still consistent), abandonedExcluded (only completed), emptyState (empty, 0), deepFocusLabel (no-mode sessions=Deep Focus), multipleSessionsPerMode (Work: 3 sessions, 6300s)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"ModeTypeBreakdown Tests\" passed after 0.019 seconds. 8 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-012",
+      "title": "Streak calculation — consecutive days, gaps reset, multiple sessions/day, grace period",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run StreakCalculatorTests suite",
+          "expected": "Consecutive days with ≥1 completed session, gaps reset, multiple sessions/day=1 active, grace period",
+          "observed": "All 13 tests passed: emptySessionsReturnsZero (0), singleSessionToday (1), singleSessionYesterday (grace period = 1), threeConsecutiveDays (3), fiveConsecutiveDays (5), gapResetsStreak (gap at day 2 → streak=2 for days 0+1), oldSessionsNoRecent (5 days ago only → 0), multipleSessionsSameDay (2 sessions day 0, 1 session day 1 → streak=2), abandonedSessionsExcluded (abandoned today → 0), abandonedDoesNotCount, gracePeriodYesterday (1), gracePeriodConsecutive (2), noGracePeriodNeeded (2)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"StreakCalculator Tests\" passed after 0.039 seconds. 13 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-013",
+      "title": "Large dataset performance — 900+ sessions, <2s render, <500ms queries",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run LargeDatasetPerformanceTests suite",
+          "expected": "With 950 sessions: dashboard query <500ms, chart build <500ms, full render <2s",
+          "observed": "All 4 tests passed: dashboardQueryPerformance (950 sessions, fetch+filter+sum in <500ms, actual: ~63ms), chartDataBuilderPerformance (180-day daily + 26-week data build in <500ms, actual: ~104ms), dashboardRenderPerformance (full fetch+streak+chart build for 950 sessions in <2s, actual: ~81ms), paginatedFetch (fetchLimit=50, fetchOffset=50; pages non-overlapping)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"Large Dataset Performance Tests\" passed after 0.300 seconds. 4 tests passed. Dashboard query: ~63ms, Chart build: ~104ms, Full render: ~81ms."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-014",
+      "title": "Statistics update reactively — after new session, ViewModel updates within 1s",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run DashboardViewModelTests — reactiveUpdate and multipleRefreshes tests",
+          "expected": "After new session inserted, vm.refresh() picks up new data immediately",
+          "observed": "reactiveUpdate: isEmpty=true before, add 1800s session, call refresh(), isEmpty=false, sessionsCompleted=1, totalFocusTime=1800. multipleRefreshes: 10 sequential add+refresh cycles all show correct running totals."
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Test \"Statistics update after new session added and refresh called\" passed after 0.001 seconds. ✔ Test \"Multiple refreshes show updated values\" passed after 0.002 seconds."
+      },
+      "issues": "Reactive update uses explicit vm.refresh() call. The unit test validates the refresh mechanism works correctly. Automatic observation reactivity (SwiftData @Query integration) is covered separately in UI testing."
+    },
+    {
+      "id": "VAL-STATS-015",
+      "title": "Midnight-spanning and long sessions — start-date attribution, 8+ hour no overflow",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run MidnightSpanningAndLongSessionTests suite",
+          "expected": "Sessions spanning midnight attributed to start date; 8+ hour sessions no overflow",
+          "observed": "All 8 tests passed: midnightSpanningStartDate (11PM Mar 15 + 2hr → appears on Mar 15, NOT Mar 16), multipleMidnightSpanning (Mar 14 23:00 → only on Mar 14; Mar 15 22:00 → only on Mar 15), eightHourSession (28800s stored/retrieved correctly), longSessionWeeklyAverage (43200s weekly avg=43200), veryLongSessionMonthlyAverage (86400s monthly avg=86400), multipleLongSessions (5×28800s avg=28800), midnightSpanningInWeeklyAverage (Apr 4 23:00 session counted in Apr 4's week, NOT Apr 5's), midnightSpanningMonthBoundary (Mar 31 23:00 → March avg=14400, April avg=0)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"MidnightSpanningAndLongSession Tests\" passed after 0.014 seconds. 8 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-STATS-016",
+      "title": "Charts render with varying data volumes — ChartDataBuilder model",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run ChartDataBuilderTests suite",
+          "expected": "Handles 1/7/30/180+ data points, single point, all-same, zero values, large values",
+          "observed": "All 18 tests passed: singleDataPoint (1 entry, value=3600), sevenDays (7 entries, each 1800), thirtyDays (30 entries, 3 non-zero), oneHundredEightyDays (181 entries for 180-day range), zeroValuesAtBaseline (days without sessions = 0), abandonedExcludedFromBarChart (only completed), largeValuesScale (28800s stored correctly), multipleSameDayAggregate (2 sessions → 5400). lastNDays (7 entries), weeklyLineChartCount (4 weeks), weeklyLineChartAverages (2700s avg over 2 sessions on 2 days), weeklyLineChartEmpty (4 weeks, all 0). yAxisRangeEmpty (0...1), yAxisRangeAllZeros (0...1), yAxisRangeSameValues (min=0, max=100+padding), yAxisRangeVariedValues (min=0, max>200), yAxisRangeMixedValues (min=0, max>50000), yAxisRangeSingleValue (0 + padding)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"ChartDataBuilder Tests\" passed after 0.043 seconds. 18 tests passed."
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-CROSS-012",
+      "title": "Analytics totals consistency — total == sum of sessions, monthly avg divides by active days",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run AnalyticsTotalsConsistencyTests suite",
+          "expected": "Dashboard total equals sum of completed session durations; monthly avg uses active-day denominator",
+          "observed": "All 8 tests passed: totalEqualsSumOfSessions (5 durations sum=14400, abandoned excluded, vm.totalFocusTime==14400), totalConsistentAfterMultipleAdds (10 sequential adds, running total matches vm after each refresh), noDoubleCounting (20 sessions × 1800s = 36000, vm total == individual sum). monthlyAverageDividesByActiveDays (5 sessions × 3600s = 18000, avg=18000/5=3600 ≠ 18000/31=580.6), weeklyAverageDividesByActiveDays (3 sessions on 3 days, avg=10800/3=3600 ≠ /7), monthlyAverageAbandonedOnly (0), mixedSessionsTotals (3 completed=10800, 2 abandoned excluded), largeDatasetTotalsConsistency (950 sessions, vm matches computed expected total)"
+        }
+      ],
+      "evidence": {
+        "screenshots": null,
+        "consoleErrors": "none",
+        "network": "n/a",
+        "testOutput": "✔ Suite \"AnalyticsTotalsConsistency Tests\" passed after 0.083 seconds. 8 tests passed."
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "The -only-testing flag with file names (e.g. FocusTests/AnalyticsDashboardTests) returns 0 tests for Swift Testing (@Suite) test suites. The flag works only with the Swift struct type names (e.g. FocusTests/StreakCalculatorTests, FocusTests/DashboardViewModelTests). The task instructions used file-level names which caused the first targeted run to return 0 tests.",
+      "resolved": true,
+      "resolution": "Used the Swift struct type names instead of file names for -only-testing flags. Also ran subsets of suites in separate xcodebuild invocations to avoid timeout from other crashing tests.",
+      "affectedAssertions": ["VAL-STATS-001", "VAL-STATS-003", "VAL-STATS-004", "VAL-STATS-005", "VAL-STATS-006", "VAL-STATS-007", "VAL-STATS-008", "VAL-STATS-009", "VAL-STATS-010", "VAL-STATS-011", "VAL-STATS-012", "VAL-STATS-013", "VAL-STATS-014", "VAL-STATS-015", "VAL-STATS-016", "VAL-CROSS-012"]
+    },
+    {
+      "description": "Running all FocusTests together times out (>600s) because other test suites (CrossAreaTests, DeepFocusSessionExitCompletionTests, BreakFlowManagerTests, etc.) have tests that crash the test runner, causing repeated restarts and total run time exceeding 600 seconds.",
+      "resolved": true,
+      "resolution": "Ran analytics test suites in 4 targeted xcodebuild invocations using specific struct type names, completing all analytics tests in under 90 seconds total.",
+      "affectedAssertions": ["VAL-STATS-001", "VAL-STATS-003", "VAL-STATS-004", "VAL-STATS-005", "VAL-STATS-006", "VAL-STATS-007", "VAL-STATS-008", "VAL-STATS-009", "VAL-STATS-010", "VAL-STATS-011", "VAL-STATS-012", "VAL-STATS-013", "VAL-STATS-014", "VAL-STATS-015", "VAL-STATS-016", "VAL-CROSS-012"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 16 assertions across 14 analytics unit test suites: all 16 passed. 153 Swift Testing unit tests executed across StreakCalculatorTests (13), DashboardViewModelTests (12), WeeklyAverageCalculatorTests (9), MonthlyAverageCalculatorTests (13), DateRangeFilterTests (9), HistoricalDataRetentionTests (7), MidnightSpanningAndLongSessionTests (8), TrendDetectorTests (24), CategoryAggregatorTests (8), ModeTypeBreakdownTests (8), DeepFocusStatsCalculatorTests (14), ChartDataBuilderTests (18), LargeDatasetPerformanceTests (4), AnalyticsTotalsConsistencyTests (8). All 153 tests passed with no failures."
+}
